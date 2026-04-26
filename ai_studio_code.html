@@ -1,0 +1,2106 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>画大饼生存战</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/matter-js/0.19.0/matter.min.js"></script>
+    <style>
+        :root {
+            --bg: #eef2f6;
+            --panel: #ffffff;
+            --line: #d8dde6;
+            --soft-line: #e9edf4;
+            --text: #1f2a37;
+            --muted: #6b778c;
+            --primary: #2563eb;
+            --danger: #e5484d;
+            --success: #1f9d55;
+            --shadow: 0 18px 48px rgba(15, 23, 42, 0.14);
+        }
+
+        * {
+            box-sizing: border-box;
+        }
+
+        body {
+            margin: 0;
+            min-height: 100vh;
+            background: linear-gradient(180deg, #f7f9fc 0%, #e9eef5 100%);
+            color: var(--text);
+            font-family: system-ui, "Microsoft YaHei", sans-serif;
+            overflow: hidden;
+        }
+
+        .workspace {
+            width: 100vw;
+            height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
+        }
+
+        .browser-shell {
+            width: min(1280px, 100%);
+            height: min(860px, calc(100vh - 40px));
+            background: #f8fafc;
+            border: 1px solid #cfd7e4;
+            border-radius: 18px;
+            box-shadow: var(--shadow);
+            overflow: hidden;
+            display: grid;
+            grid-template-rows: 76px 1fr;
+        }
+
+        .browser-top {
+            background: linear-gradient(180deg, #f7f8fb 0%, #eef2f8 100%);
+            border-bottom: 1px solid #dde4ef;
+            padding: 12px 18px 10px;
+        }
+
+        .chrome-dots {
+            display: flex;
+            gap: 8px;
+            align-items: center;
+            margin-bottom: 10px;
+        }
+
+        .chrome-dots span {
+            width: 11px;
+            height: 11px;
+            border-radius: 50%;
+            display: inline-block;
+        }
+
+        .chrome-dots span:nth-child(1) { background: #ff5f57; }
+        .chrome-dots span:nth-child(2) { background: #febc2e; }
+        .chrome-dots span:nth-child(3) { background: #28c840; }
+
+        .browser-bar {
+            display: grid;
+            grid-template-columns: 1fr auto auto;
+            gap: 12px;
+            align-items: center;
+        }
+
+        .address-bar,
+        .browser-pill,
+        .player-input {
+            height: 38px;
+            border: 1px solid #d7deea;
+            border-radius: 10px;
+            background: rgba(255, 255, 255, 0.95);
+            color: var(--muted);
+            display: flex;
+            align-items: center;
+        }
+
+        .address-bar {
+            padding: 0 14px;
+            font-size: 13px;
+            overflow: hidden;
+            white-space: nowrap;
+            text-overflow: ellipsis;
+        }
+
+        .browser-pill {
+            padding: 0 14px;
+            font-size: 13px;
+            font-weight: 600;
+            color: #4c5a6b;
+        }
+
+        .player-input {
+            padding: 0 12px;
+            gap: 8px;
+        }
+
+        .player-input input {
+            border: 0;
+            outline: none;
+            background: transparent;
+            font: inherit;
+            width: 110px;
+            color: var(--text);
+        }
+
+        .shell-content {
+            display: grid;
+            grid-template-columns: 250px 1fr 270px;
+            height: 100%;
+            min-height: 0;
+        }
+
+        .sidebar,
+        .inspector {
+            background: #fbfcfe;
+            border-right: 1px solid var(--soft-line);
+            padding: 18px 16px;
+            overflow-x: hidden;
+            overflow-y: scroll;
+        }
+
+        .inspector {
+            border-right: 0;
+            border-left: 1px solid var(--soft-line);
+        }
+
+        .sidebar-title,
+        .panel-title {
+            font-size: 12px;
+            letter-spacing: 0.08em;
+            color: #8592a6;
+            text-transform: uppercase;
+            margin-bottom: 12px;
+        }
+
+        .nav-item {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 10px 12px;
+            margin-bottom: 8px;
+            border-radius: 10px;
+            color: #445063;
+            background: transparent;
+            font-size: 14px;
+        }
+
+        .nav-item.active {
+            background: #e9f1ff;
+            color: #0f56d9;
+            font-weight: 700;
+        }
+
+        .main-stage {
+            padding: 22px;
+            display: flex;
+            flex-direction: column;
+            min-width: 0;
+            min-height: 0;
+        }
+
+        .toolbar {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 16px;
+            margin-bottom: 16px;
+        }
+
+        .toolbar-left h1 {
+            margin: 0 0 4px;
+            font-size: 24px;
+            font-weight: 800;
+        }
+
+        .toolbar-left p,
+        .meta-note,
+        .panel-copy,
+        .metric-sub {
+            margin: 0;
+            color: var(--muted);
+            font-size: 13px;
+        }
+
+        .toolbar-right {
+            display: grid;
+            grid-template-columns: repeat(3, minmax(130px, 1fr));
+            gap: 12px;
+        }
+
+        .metric-card {
+            background: var(--panel);
+            border: 1px solid var(--soft-line);
+            border-radius: 14px;
+            padding: 12px 14px;
+            min-width: 0;
+            min-height: 94px;
+        }
+
+        .metric-label {
+            font-size: 12px;
+            color: #8390a3;
+            margin-bottom: 8px;
+            text-transform: uppercase;
+            letter-spacing: 0.04em;
+        }
+
+        .metric-value {
+            font-size: 24px;
+            font-weight: 800;
+            line-height: 1;
+            margin-bottom: 6px;
+        }
+
+        #status-text {
+            min-height: 48px;
+            display: flex;
+            align-items: flex-start;
+            font-size: 22px;
+            line-height: 1.1;
+        }
+
+        .board-row {
+            display: flex;
+            gap: 18px;
+            min-height: 0;
+            flex: 1;
+        }
+
+        .jira-column {
+            flex: 0 0 470px;
+            background: var(--panel);
+            border: 1px solid var(--line);
+            border-radius: 18px;
+            display: flex;
+            flex-direction: column;
+            min-height: 0;
+            overflow: hidden;
+        }
+
+        .column-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 14px 16px;
+            border-bottom: 1px solid var(--soft-line);
+            background: #fcfdff;
+        }
+
+        .column-header strong {
+            font-size: 15px;
+        }
+
+        .column-badge {
+            font-size: 12px;
+            padding: 4px 8px;
+            border-radius: 999px;
+            background: #edf3ff;
+            color: #2159d1;
+            font-weight: 700;
+        }
+
+        #game-shell {
+            position: relative;
+            width: 100%;
+            flex: 1;
+            background:
+                linear-gradient(180deg, rgba(37, 99, 235, 0.04) 0%, rgba(37, 99, 235, 0) 18%),
+                linear-gradient(180deg, #ffffff 0%, #fbfdff 100%);
+            overflow: hidden;
+        }
+
+        #game-canvas {
+            position: relative;
+            width: 100%;
+            height: 100%;
+            overflow: hidden;
+        }
+
+        #game-canvas canvas {
+            display: block;
+            width: 100%;
+            height: 100%;
+        }
+
+        .warning-line {
+            position: absolute;
+            left: 12px;
+            right: 12px;
+            top: 132px;
+            border-top: 2px dashed rgba(229, 72, 77, 0.85);
+            pointer-events: none;
+            z-index: 4;
+        }
+
+        .warning-label {
+            position: absolute;
+            top: 112px;
+            right: 16px;
+            background: rgba(229, 72, 77, 0.1);
+            color: var(--danger);
+            font-size: 11px;
+            font-weight: 700;
+            padding: 4px 8px;
+            border-radius: 999px;
+            z-index: 4;
+            pointer-events: none;
+        }
+
+        .drop-hint {
+            position: absolute;
+            left: 0;
+            right: 0;
+            top: 16px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 0 16px;
+            z-index: 4;
+            pointer-events: none;
+        }
+
+        .drop-pill {
+            background: rgba(255, 255, 255, 0.92);
+            border: 1px solid #dbe4f2;
+            border-radius: 999px;
+            padding: 8px 12px;
+            font-size: 12px;
+            color: #596579;
+            box-shadow: 0 8px 20px rgba(15, 23, 42, 0.08);
+        }
+
+        .drop-pill strong {
+            color: var(--text);
+        }
+
+        .side-card,
+        .stat-card {
+            background: var(--panel);
+            border: 1px solid var(--soft-line);
+            border-radius: 14px;
+            padding: 14px;
+            margin-bottom: 12px;
+        }
+
+        .interference-panel {
+            min-height: 0;
+            max-height: 100%;
+            overflow-x: hidden;
+            overflow-y: auto;
+        }
+
+        .skill-grid {
+            display: grid;
+            gap: 10px;
+        }
+
+        .skill-btn {
+            width: 100%;
+            text-align: left;
+            background: #f6f9ff;
+            border: 1px solid #d8e4fb;
+            color: #1f3f83;
+            font-weight: 700;
+        }
+
+        .skill-btn.active {
+            background: #175cd3;
+            color: #ffffff;
+            border-color: #175cd3;
+            box-shadow: 0 10px 24px rgba(23, 92, 211, 0.22);
+        }
+
+        .skill-btn:disabled {
+            cursor: not-allowed;
+            opacity: 0.72;
+            transform: none;
+        }
+
+        .skill-meta {
+            margin-top: 6px;
+            font-size: 12px;
+            color: #6b7b92;
+        }
+
+        .sequence-item {
+            display: grid;
+            grid-template-columns: 18px 1fr auto;
+            gap: 10px;
+            align-items: center;
+            font-size: 13px;
+            padding: 6px 0;
+            color: #465163;
+        }
+
+        .sequence-dot {
+            width: 18px;
+            height: 18px;
+            border-radius: 50%;
+            border: 1px solid rgba(15, 23, 42, 0.08);
+        }
+
+        .sequence-tag {
+            font-size: 11px;
+            color: #8491a6;
+        }
+
+        .hotkey {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            min-width: 28px;
+            height: 24px;
+            padding: 0 8px;
+            background: #f3f6fb;
+            border: 1px solid #dbe4f2;
+            border-bottom-width: 2px;
+            border-radius: 8px;
+            font-size: 12px;
+            font-weight: 700;
+            color: #4c586c;
+        }
+
+        #notifications {
+            position: fixed;
+            top: 28px;
+            right: 28px;
+            width: min(360px, calc(100vw - 32px));
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+            z-index: 30;
+            pointer-events: none;
+        }
+
+        .toast {
+            background: rgba(255, 255, 255, 0.96);
+            border: 1px solid #dbe4f2;
+            border-left: 4px solid var(--primary);
+            border-radius: 14px;
+            box-shadow: 0 12px 30px rgba(15, 23, 42, 0.14);
+            padding: 12px 14px;
+            animation: slideIn 0.28s ease-out;
+            pointer-events: auto;
+        }
+
+        .toast.warn { border-left-color: #eab308; }
+        .toast.danger { border-left-color: var(--danger); }
+        .toast.success { border-left-color: var(--success); }
+
+        .toast-head {
+            font-size: 12px;
+            color: #607087;
+            margin-bottom: 6px;
+            display: flex;
+            justify-content: space-between;
+            gap: 12px;
+        }
+
+        .toast-body {
+            font-size: 14px;
+            line-height: 1.5;
+            color: var(--text);
+        }
+
+        @keyframes slideIn {
+            from {
+                opacity: 0;
+                transform: translateY(-12px) translateX(12px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0) translateX(0);
+            }
+        }
+
+        .shake {
+            animation: boardShake 0.45s linear;
+        }
+
+        @keyframes boardShake {
+            0%, 100% { transform: translate3d(0, 0, 0); }
+            15% { transform: translate3d(-8px, 4px, 0); }
+            30% { transform: translate3d(10px, -5px, 0); }
+            45% { transform: translate3d(-12px, -2px, 0); }
+            60% { transform: translate3d(9px, 6px, 0); }
+            75% { transform: translate3d(-6px, -4px, 0); }
+        }
+
+        .flash-danger {
+            animation: flashDanger 0.35s ease-out;
+        }
+
+        @keyframes flashDanger {
+            0% { box-shadow: inset 0 0 0 0 rgba(229, 72, 77, 0); }
+            35% { box-shadow: inset 0 0 0 999px rgba(229, 72, 77, 0.18); }
+            100% { box-shadow: inset 0 0 0 999px rgba(229, 72, 77, 0); }
+        }
+
+        #panic-overlay,
+        #game-over {
+            position: fixed;
+            inset: 0;
+            z-index: 40;
+            display: none;
+            align-items: center;
+            justify-content: center;
+        }
+
+        #panic-overlay.visible,
+        #game-over.visible {
+            display: flex;
+        }
+
+        #panic-overlay {
+            background: #eef3f8;
+            padding: 24px;
+        }
+
+        .spreadsheet {
+            width: min(1440px, calc(100vw - 32px));
+            height: min(880px, calc(100vh - 32px));
+            background: #ffffff;
+            border: 1px solid #cfd8e3;
+            box-shadow: 0 24px 64px rgba(15, 23, 42, 0.24);
+            border-radius: 8px;
+            overflow: hidden;
+            display: grid;
+            grid-template-rows: 56px 1fr;
+        }
+
+        .sheet-top {
+            background: linear-gradient(180deg, #227447 0%, #1e6d41 100%);
+            color: #ffffff;
+            padding: 0 20px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            font-weight: 700;
+        }
+
+        .sheet-grid {
+            display: grid;
+            grid-template-columns: 48px repeat(9, 1fr);
+            grid-auto-rows: 34px;
+            font-size: 12px;
+            color: #334155;
+        }
+
+        .sheet-cell {
+            border-right: 1px solid #e5ebf2;
+            border-bottom: 1px solid #e5ebf2;
+            padding: 8px 10px;
+            overflow: hidden;
+            white-space: nowrap;
+            text-overflow: ellipsis;
+            background: #ffffff;
+        }
+
+        .sheet-cell.head {
+            background: #f4f7fb;
+            font-weight: 700;
+            text-align: center;
+            color: #607087;
+        }
+
+        .sheet-cell.highlight {
+            background: #ebfff1;
+            color: #17663f;
+            font-weight: 700;
+        }
+
+        .sheet-caption {
+            position: absolute;
+            top: 22px;
+            right: 24px;
+            background: rgba(15, 23, 42, 0.78);
+            color: white;
+            padding: 10px 14px;
+            border-radius: 12px;
+            font-size: 13px;
+            box-shadow: 0 12px 28px rgba(15, 23, 42, 0.2);
+        }
+
+        #game-over {
+            background: rgba(9, 15, 25, 0.68);
+            backdrop-filter: blur(4px);
+            padding: 18px;
+        }
+
+        .pip-modal {
+            width: min(760px, calc(100vw - 28px));
+            background: #ffffff;
+            border-radius: 18px;
+            box-shadow: 0 24px 64px rgba(15, 23, 42, 0.28);
+            overflow: hidden;
+        }
+
+        .pip-header {
+            padding: 22px 24px 18px;
+            border-bottom: 1px solid var(--soft-line);
+        }
+
+        .pip-kicker {
+            font-size: 12px;
+            font-weight: 700;
+            color: var(--danger);
+            letter-spacing: 0.06em;
+            text-transform: uppercase;
+            margin-bottom: 8px;
+        }
+
+        .pip-header h2 {
+            margin: 0 0 8px;
+            font-size: 28px;
+        }
+
+        .pip-body {
+            padding: 20px 24px 24px;
+        }
+
+        .pip-grid {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 12px;
+            margin-bottom: 16px;
+        }
+
+        .pip-stat {
+            border: 1px solid var(--soft-line);
+            border-radius: 14px;
+            padding: 14px;
+            background: #fbfcfe;
+        }
+
+        .pip-stat strong {
+            display: block;
+            font-size: 28px;
+            margin-bottom: 6px;
+        }
+
+        .pip-eval {
+            border: 1px dashed #d7deea;
+            background: #f8fbff;
+            border-radius: 14px;
+            padding: 16px;
+            margin-bottom: 18px;
+            font-size: 15px;
+            line-height: 1.65;
+        }
+
+        .pip-actions {
+            display: flex;
+            justify-content: flex-end;
+            gap: 12px;
+        }
+
+        .btn {
+            appearance: none;
+            border: 0;
+            border-radius: 10px;
+            padding: 11px 16px;
+            font: inherit;
+            cursor: pointer;
+            transition: transform 0.15s ease, opacity 0.15s ease;
+        }
+
+        .btn:hover {
+            transform: translateY(-1px);
+        }
+
+        .btn-primary {
+            background: #175cd3;
+            color: #ffffff;
+            font-weight: 700;
+        }
+
+        .btn-secondary {
+            background: #edf3ff;
+            color: #2459ca;
+            font-weight: 700;
+        }
+
+        @media (max-width: 1180px) {
+            .shell-content {
+                grid-template-columns: 220px 1fr;
+            }
+
+            .inspector {
+                display: none;
+            }
+        }
+
+        @media (max-width: 900px) {
+            .shell-content {
+                grid-template-columns: 1fr;
+            }
+
+            .sidebar {
+                display: none;
+            }
+
+            .toolbar-right {
+                grid-template-columns: 1fr;
+            }
+
+            .board-row {
+                justify-content: center;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="workspace">
+        <div class="browser-shell" id="browser-shell">
+            <div class="browser-top">
+                <div class="chrome-dots">
+                    <span></span><span></span><span></span>
+                </div>
+                <div class="browser-bar">
+                    <div class="address-bar">https://workhub.local/boards/prd-survivor/sprint_2026_q2</div>
+                    <div class="browser-pill">协作同步：正常</div>
+                    <label class="player-input">
+                        <span>负责人</span>
+                        <input id="player-name" type="text" maxlength="16" value="产品经理">
+                    </label>
+                </div>
+            </div>
+
+            <div class="shell-content">
+                <aside class="sidebar">
+                    <div class="sidebar-title">项目目录</div>
+                    <div class="nav-item">冲刺_2026_第2季度 <span>12</span></div>
+                    <div class="nav-item active">待办池 <span>∞</span></div>
+                    <div class="nav-item">技术债 <span>94</span></div>
+                    <div class="nav-item">干系人备注 <span>7</span></div>
+                    <div class="nav-item">愿景草案_v19 <span>进行中</span></div>
+                    <div class="nav-item">紧急救火 <span>今日</span></div>
+
+                    <div class="side-card">
+                        <div class="panel-title">提示</div>
+                        <p class="panel-copy">移动鼠标选择投放位置，点击投放关键词球。连续合成会提高老板好感度，但开发和设计随时会让局面失控。</p>
+                        <p class="panel-copy" style="margin-top: 8px;">当你合成出 L6「全链路打通」及以上等级时，可以主动撞碎老板球，并把大愿景拆成可排期的小活。</p>
+                    </div>
+
+                    <div class="side-card">
+                        <div class="panel-title">快捷键</div>
+                        <p class="panel-copy"><span class="hotkey">Esc</span> 或 <span class="hotkey">Space</span> 启动老板键</p>
+                        <p class="panel-copy"><span class="hotkey">R</span> 在绩效面板出现后快速重开</p>
+                    </div>
+                </aside>
+
+                <main class="main-stage">
+                    <div class="toolbar">
+                        <div class="toolbar-left">
+                            <h1>画大饼生存战</h1>
+                            <p>待办列伪装成办公看板，目标是在逻辑崩溃前合成出“改变世界的 PPT”。</p>
+                        </div>
+                        <div class="toolbar-right">
+                            <div class="metric-card">
+                                <div class="metric-label">产能值</div>
+                                <div class="metric-value" id="score">0</div>
+                                <p class="metric-sub">已完成故事点</p>
+                            </div>
+                            <div class="metric-card">
+                                <div class="metric-label">连击</div>
+                                <div class="metric-value" id="combo">0</div>
+                                <p class="metric-sub">老板对你的好感度连击</p>
+                            </div>
+                            <div class="metric-card">
+                                <div class="metric-label">状态</div>
+                                <div class="metric-value" id="status-text">稳态推进</div>
+                                <p class="metric-sub" id="chaos-timer">下次老板拍脑袋: 45s</p>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="board-row">
+                        <section class="jira-column">
+                            <div class="column-header">
+                                <strong>待办</strong>
+                                <span class="column-badge">干系人混乱现场</span>
+                            </div>
+                            <div id="game-shell">
+                                <div class="warning-label">逻辑红线</div>
+                                <div class="warning-line"></div>
+                                <div class="drop-hint">
+                                    <div class="drop-pill">下一个：<strong id="next-label">修复Bug</strong></div>
+                                    <div class="drop-pill">点击下达“产品指令”</div>
+                                </div>
+                                <div id="game-canvas"></div>
+                            </div>
+                        </section>
+
+                        <section class="side-card interference-panel" style="flex:1; min-width: 0; margin-bottom: 0;">
+                            <div class="panel-title">干扰机制</div>
+                            <div class="stat-card">
+                                <strong style="display:block; margin-bottom: 8px;">向上管理技能</strong>
+                                <div class="skill-grid">
+                                    <div>
+                                        <button class="btn skill-btn" id="postpone-skill-button" type="button">战略暂缓</button>
+                                        <p class="skill-meta" id="postpone-skill-meta">点击场上的老板球，将其排到下季度。</p>
+                                    </div>
+                                    <div>
+                                        <button class="btn skill-btn" id="canary-skill-button" type="button">灰度发布</button>
+                                        <p class="skill-meta" id="canary-skill-meta">激活后，接下来 3 个投放球会直接穿过堆积区落到底部。</p>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="stat-card">
+                                <strong style="display:block; margin-bottom: 8px;">老板的突发奇想</strong>
+                                <p class="panel-copy">每个老板球有 3 点耐心值。L3-L4 碰撞削 1 点，L5 削 2 点，L6 及以上可直接拆解。</p>
+                            </div>
+                            <div class="stat-card">
+                                <strong style="display:block; margin-bottom: 8px;">开发的拒绝</strong>
+                                <p class="panel-copy">同级球碰撞有 15% 概率被“暂不支持”，合成失败并产生强排斥力。</p>
+                            </div>
+                            <div class="stat-card">
+                                <strong style="display:block; margin-bottom: 8px;">设计师的审美坚持</strong>
+                                <p class="panel-copy">随机膨胀一个现有球体，占满宝贵版面，逼迫你重新整理“愿景”。</p>
+                            </div>
+                            <div class="stat-card">
+                                <strong style="display:block; margin-bottom: 8px;">危机感调节</strong>
+                                <p class="panel-copy">堆积高度超过 60% 时，系统会进入线上故障处理模式，暂停老板球投放；5 秒内连成 3 次，随机清掉一个老板球。</p>
+                            </div>
+                        </section>
+                    </div>
+                </main>
+
+                <aside class="inspector">
+                    <div class="sidebar-title">进化路径</div>
+                    <div id="sequence-list"></div>
+                    <div class="side-card">
+                        <div class="panel-title">需求评审会</div>
+                        <p class="panel-copy">每拿到 1000 分，系统会自动清理所有 L3 以下小球，模拟“需求评审会瘦身”。</p>
+                    </div>
+                    <div class="side-card">
+                        <div class="panel-title">当前简报</div>
+                        <p class="meta-note" id="report-copy">场面可控，建议继续画饼。</p>
+                    </div>
+                </aside>
+            </div>
+        </div>
+    </div>
+
+    <div id="notifications"></div>
+
+    <div id="panic-overlay" aria-hidden="true">
+        <div class="spreadsheet">
+            <div class="sheet-top">
+                <span>FY26_Budget_Forecast_v12.xlsx</span>
+                <span>已自动保存</span>
+            </div>
+            <div class="sheet-grid" id="sheet-grid"></div>
+        </div>
+        <div class="sheet-caption">财务报表模式已启用，再按一次 <strong>Esc</strong> 或 <strong>Space</strong> 返回。</div>
+    </div>
+
+    <div id="game-over" aria-hidden="true">
+        <div class="pip-modal">
+            <div class="pip-header">
+                <div class="pip-kicker">绩效评估</div>
+                <h2 id="pip-title">关于 产品经理 的绩效改进计划 (PIP)</h2>
+                <p class="meta-note">逻辑崩溃线连续超载 3 秒，项目愿景宣告失控。</p>
+            </div>
+            <div class="pip-body">
+                <div class="pip-grid">
+                    <div class="pip-stat">
+                        <strong id="pip-score">0</strong>
+                        <span>总投放伪需求</span>
+                    </div>
+                    <div class="pip-stat">
+                        <strong id="pip-favor">0</strong>
+                        <span>成功忽悠老板</span>
+                    </div>
+                    <div class="pip-stat">
+                        <strong id="pip-crash">0</strong>
+                        <span>开发拒绝架构崩溃</span>
+                    </div>
+                </div>
+                <div class="pip-eval" id="pip-eval"></div>
+                <div class="pip-actions">
+                    <button class="btn btn-secondary" id="dismiss-report">继续复盘</button>
+                    <button class="btn btn-primary" id="restart-button">重新画饼</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const BUZZWORDS = [
+            { label: "修复Bug", color: "#8b949e", score: 10, radius: 26 },
+            { label: "优化界面", color: "#9bc6ff", score: 25, radius: 34 },
+            { label: "交互升级", color: "#4f8df7", score: 45, radius: 43 },
+            { label: "降本增效", color: "#38bdf8", score: 70, radius: 53 },
+            { label: "深度赋能", color: "#4ade80", score: 110, radius: 64 },
+            { label: "全链路打通", color: "#facc15", score: 160, radius: 76 },
+            { label: "数字化转型", color: "#fb923c", score: 220, radius: 90 },
+            { label: "生态闭环", color: "#ef4444", score: 320, radius: 105 },
+            { label: "行业颠覆", color: "#a855f7", score: 480, radius: 122 },
+            { label: "改变世界的 PPT", color: "#fbbf24", score: 750, radius: 142 }
+        ];
+
+        const BOSS_VISIONS = ["大模型驱动", "元宇宙接口", "AI 原生工作流", "全球化第二曲线", "战略级闭环飞轮"];
+        const REVIEW_THRESHOLD_STEP = 1000;
+        const DROP_COOLDOWN = 460;
+        const BOSS_INTERVAL_MS = 45000;
+        const DESIGNER_INTERVAL_MS = 18000;
+        const DEV_REJECT_RATE = 0.15;
+        const DECONSTRUCT_LEVEL = 5;
+        const DEFAULT_BOARD_HEIGHT = 690;
+        const BOARD_WIDTH = 470;
+        const BOSS_PATIENCE = 3;
+        const POSTPONE_DURATION_MS = 30000;
+        const POSTPONE_COOLDOWN_MS = 90000;
+        const CANARY_RELEASE_COOLDOWN_MS = 60000;
+        const CANARY_RELEASE_CHARGES = 3;
+        const COMBO_RESCUE_WINDOW_MS = 5000;
+        const CRISIS_STACK_RATIO = 0.6;
+        const BOSS_SPAWN_GRACE_MS = 1200;
+        const BOSS_HIT_COOLDOWN_MS = 700;
+        const COLLISION_CATEGORIES = {
+            WALL: 0x0001,
+            KEYWORD: 0x0002,
+            BOSS: 0x0004
+        };
+
+        const {
+            Engine,
+            Render,
+            Runner,
+            Bodies,
+            Body,
+            Composite,
+            Events,
+            World
+        } = Matter;
+
+        const dom = {
+            shell: document.getElementById("browser-shell"),
+            gameShell: document.getElementById("game-shell"),
+            gameCanvas: document.getElementById("game-canvas"),
+            notifications: document.getElementById("notifications"),
+            warningLine: document.querySelector(".warning-line"),
+            warningLabel: document.querySelector(".warning-label"),
+            score: document.getElementById("score"),
+            combo: document.getElementById("combo"),
+            nextLabel: document.getElementById("next-label"),
+            status: document.getElementById("status-text"),
+            chaosTimer: document.getElementById("chaos-timer"),
+            report: document.getElementById("report-copy"),
+            playerName: document.getElementById("player-name"),
+            panic: document.getElementById("panic-overlay"),
+            gameOver: document.getElementById("game-over"),
+            pipTitle: document.getElementById("pip-title"),
+            pipScore: document.getElementById("pip-score"),
+            pipFavor: document.getElementById("pip-favor"),
+            pipCrash: document.getElementById("pip-crash"),
+            pipEval: document.getElementById("pip-eval"),
+            restartButton: document.getElementById("restart-button"),
+            dismissReport: document.getElementById("dismiss-report"),
+            sequenceList: document.getElementById("sequence-list"),
+            sheetGrid: document.getElementById("sheet-grid"),
+            postponeSkillButton: document.getElementById("postpone-skill-button"),
+            postponeSkillMeta: document.getElementById("postpone-skill-meta"),
+            canarySkillButton: document.getElementById("canary-skill-button"),
+            canarySkillMeta: document.getElementById("canary-skill-meta")
+        };
+
+        let boardWidth = BOARD_WIDTH;
+        let boardHeight = DEFAULT_BOARD_HEIGHT;
+        let warningLineY = 132;
+        let dropY = 78;
+        const pairCooldown = new Set();
+        let canDrop = true;
+        let mouseX = boardWidth / 2;
+        let bossCountdownStartedAt = Date.now();
+        let designerCountdownStartedAt = Date.now();
+        let overflowStartedAt = null;
+        let reviewThreshold = REVIEW_THRESHOLD_STEP;
+        let audioContext = null;
+        let render;
+        let walls;
+
+        const game = {
+            score: 0,
+            combo: 0,
+            totalDrops: 0,
+            bossFavor: 0,
+            devRejects: 0,
+            deconstructions: 0,
+            highestLevel: 0,
+            gameOver: false,
+            panicMode: false,
+            nextLevel: 0,
+            mergeTimestamps: [],
+            lastComboRescueAt: 0,
+            bossSpawnPaused: false,
+            bossPauseStartedAt: 0,
+            postponeCooldownUntil: 0,
+            canaryCooldownUntil: 0,
+            canaryCharges: 0
+        };
+
+        buildSequenceList();
+        buildSpreadsheet();
+        syncBoardMetrics();
+
+        const engine = Engine.create();
+        engine.gravity.y = 0.96;
+
+        render = Render.create({
+            element: dom.gameCanvas,
+            engine,
+            options: {
+                width: boardWidth,
+                height: boardHeight,
+                wireframes: false,
+                background: "transparent",
+                pixelRatio: window.devicePixelRatio || 1
+            }
+        });
+
+        const runner = Runner.create();
+        Render.run(render);
+        Runner.run(runner, engine);
+
+        walls = createWorldBounds();
+        Composite.add(engine.world, walls);
+
+        Events.on(render, "afterRender", drawOverlay);
+        Events.on(engine, "collisionStart", handleCollisionStart);
+        Events.on(engine, "beforeUpdate", updateTransientBodies);
+
+        dom.gameShell.addEventListener("mousemove", onPointerMove);
+        dom.gameShell.addEventListener("mousedown", handleBoardPointerDown);
+        dom.restartButton.addEventListener("click", restartGame);
+        dom.dismissReport.addEventListener("click", dismissGameOver);
+        dom.canarySkillButton.addEventListener("click", activateCanaryRelease);
+        dom.postponeSkillButton.addEventListener("click", () => {
+            if (Date.now() < game.postponeCooldownUntil) {
+                notify("项目办", `战略暂缓冷却中，还需 ${Math.ceil((game.postponeCooldownUntil - Date.now()) / 1000)} 秒。`, "warn");
+            } else {
+                notify("项目办", "战略暂缓已就绪，请直接点击场上的老板球。", "success");
+            }
+        });
+
+        window.addEventListener("load", () => {
+            requestAnimationFrame(() => {
+                resizeBoard();
+                setTimeout(resizeBoard, 80);
+                setTimeout(resizeBoard, 220);
+            });
+        });
+        window.addEventListener("resize", () => {
+            requestAnimationFrame(resizeBoard);
+        });
+
+        document.addEventListener("keydown", (event) => {
+            if (event.code === "Space" || event.code === "Escape") {
+                event.preventDefault();
+                togglePanic();
+            }
+
+            if ((event.key === "r" || event.key === "R") && game.gameOver) {
+                restartGame();
+            }
+        });
+
+        setInterval(updateRuntimeStatus, 250);
+        setInterval(checkOverflowState, 120);
+        setInterval(maybeTriggerDesignerChaos, DESIGNER_INTERVAL_MS);
+        setInterval(maybeTriggerBossVision, 1000);
+
+        queueNextWord();
+        notify("工作台", "待办已同步，开始撰写新一轮需求愿景。", "success");
+        updateHud();
+
+        function createWorldBounds() {
+            const options = {
+                isStatic: true,
+                collisionFilter: {
+                    category: COLLISION_CATEGORIES.WALL,
+                    mask: COLLISION_CATEGORIES.KEYWORD | COLLISION_CATEGORIES.BOSS
+                },
+                render: { visible: false }
+            };
+            return [
+                Bodies.rectangle(boardWidth / 2, boardHeight + 14, boardWidth + 30, 30, options),
+                Bodies.rectangle(-10, boardHeight / 2, 20, boardHeight, options),
+                Bodies.rectangle(boardWidth + 10, boardHeight / 2, 20, boardHeight, options)
+            ];
+        }
+
+        function createKeywordBody(x, y, level) {
+            const config = BUZZWORDS[level];
+            const body = Bodies.circle(x, y, config.radius, {
+                label: "buzzword",
+                restitution: 0.06,
+                friction: 0.72,
+                frictionStatic: 0.92,
+                density: 0.0022 + level * 0.00022,
+                slop: 0.02,
+                collisionFilter: {
+                    category: COLLISION_CATEGORIES.KEYWORD,
+                    mask: COLLISION_CATEGORIES.WALL | COLLISION_CATEGORIES.KEYWORD | COLLISION_CATEGORIES.BOSS
+                },
+                render: {
+                    fillStyle: config.color,
+                    strokeStyle: "rgba(255,255,255,0.95)",
+                    lineWidth: 2
+                }
+            });
+
+            body.level = level;
+            body.displayLabel = config.label;
+            body.radius = config.radius;
+            body.isMergingLocked = false;
+            body.designerScaleTicks = 0;
+            body.isCanary = false;
+            return body;
+        }
+
+        function createBossBall(x) {
+            const label = BOSS_VISIONS[Math.floor(Math.random() * BOSS_VISIONS.length)];
+            const body = Bodies.circle(x, 42, 52, {
+                label: "bossVision",
+                restitution: 0.02,
+                friction: 0.92,
+                frictionStatic: 1,
+                density: 0.01,
+                collisionFilter: {
+                    category: COLLISION_CATEGORIES.BOSS,
+                    mask: COLLISION_CATEGORIES.WALL | COLLISION_CATEGORIES.KEYWORD | COLLISION_CATEGORIES.BOSS
+                },
+                render: {
+                    fillStyle: "#b8c2d6",
+                    strokeStyle: "#6a778d",
+                    lineWidth: 3
+                }
+            });
+
+            body.displayLabel = label;
+            body.radius = 52;
+            body.patience = BOSS_PATIENCE;
+            body.maxPatience = BOSS_PATIENCE;
+            body.isPostponed = false;
+            body.spawnedAt = Date.now();
+            body.lastNegotiatedAt = 0;
+            return body;
+        }
+
+        function buildSequenceList() {
+            dom.sequenceList.innerHTML = "";
+            BUZZWORDS.forEach((item, index) => {
+                const row = document.createElement("div");
+                row.className = "sequence-item";
+                row.innerHTML = `
+                    <span class="sequence-dot" style="background:${item.color}"></span>
+                    <span>${item.label}</span>
+                    <span class="sequence-tag">${index + 1}级</span>
+                `;
+                dom.sequenceList.appendChild(row);
+            });
+        }
+
+        function buildSpreadsheet() {
+            const headers = ["", "A", "B", "C", "D", "E", "F", "G", "H", "I"];
+            headers.forEach((header) => {
+                const cell = document.createElement("div");
+                cell.className = "sheet-cell head";
+                cell.textContent = header;
+                dom.sheetGrid.appendChild(cell);
+            });
+
+            for (let row = 1; row <= 24; row += 1) {
+                const rowHead = document.createElement("div");
+                rowHead.className = "sheet-cell head";
+                rowHead.textContent = row;
+                dom.sheetGrid.appendChild(rowHead);
+
+                for (let col = 1; col <= 9; col += 1) {
+                    const cell = document.createElement("div");
+                    cell.className = "sheet-cell";
+                    if (row === 1) cell.textContent = ["部门", "负责人", "预算", "实际", "环比", "风险", "汇率", "备注", "状态"][col - 1];
+                    else if (col === 1) cell.textContent = ["项目办", "增长", "基础设施", "销售", "财务", "法务"][row % 6];
+                    else if (col === 9) cell.textContent = row % 3 === 0 ? "正常" : row % 4 === 0 ? "复核中" : "待处理";
+                    else if (col === 6) cell.textContent = row % 5 === 0 ? "低" : row % 2 === 0 ? "中" : "高";
+                    else cell.textContent = ((row * col * 137) % 9000 + 1000).toLocaleString("zh-CN");
+                    if ((row === 8 && col >= 3 && col <= 5) || (row === 15 && col >= 4 && col <= 7)) {
+                        cell.classList.add("highlight");
+                    }
+                    dom.sheetGrid.appendChild(cell);
+                }
+            }
+        }
+
+        function onPointerMove(event) {
+            const rect = dom.gameShell.getBoundingClientRect();
+            mouseX = clamp(event.clientX - rect.left, 28, boardWidth - 28);
+        }
+
+        function handleBoardPointerDown(event) {
+            if (event.button !== 0) return;
+
+            const rect = dom.gameShell.getBoundingClientRect();
+            const point = {
+                x: clamp(event.clientX - rect.left, 28, boardWidth - 28),
+                y: event.clientY - rect.top
+            };
+
+            mouseX = point.x;
+            const clickedBoss = findBossBodyAtPoint(point);
+            if (clickedBoss) {
+                if (clickedBoss.isPostponed) {
+                    notify("项目办", "这个老板需求已经被排到下季度了，先处理别的。", "warn");
+                    return;
+                }
+                if (Date.now() < game.postponeCooldownUntil) {
+                    notify("项目办", `战略暂缓冷却中，还需 ${Math.ceil((game.postponeCooldownUntil - Date.now()) / 1000)} 秒。`, "warn");
+                    return;
+                }
+            }
+            if (tryUseStrategicPostponement(point)) return;
+            dropCurrentWord();
+        }
+
+        function dropCurrentWord() {
+            if (!canDrop || game.gameOver || game.panicMode) return;
+            unlockAudio();
+
+            const word = createKeywordBody(mouseX, dropY, game.nextLevel);
+            if (game.canaryCharges > 0) {
+                applyCanaryRelease(word);
+                game.canaryCharges -= 1;
+                if (game.canaryCharges === 0) {
+                    notify("工作台", "灰度发布窗口已关闭，后续需求重新进入主链路。", "warn");
+                }
+            }
+            World.add(engine.world, word);
+
+            game.totalDrops += 1;
+            canDrop = false;
+            playSound("drop");
+            dom.status.textContent = word.isCanary ? "灰度发布中" : "需求已排期";
+            dom.report.textContent = word.isCanary
+                ? `灰度通道生效，剩余 ${game.canaryCharges} 个投放球可穿透堆积直落到底部。`
+                : "新的伪需求已进入待办池，留意碰撞时机。";
+            updateSkillButtons();
+            setTimeout(() => {
+                canDrop = true;
+            }, DROP_COOLDOWN);
+
+            queueNextWord();
+            updateHud();
+        }
+
+        function queueNextWord() {
+            const pool = [0, 0, 0, 1, 1, 2];
+            game.nextLevel = pool[Math.floor(Math.random() * pool.length)];
+            dom.nextLabel.textContent = BUZZWORDS[game.nextLevel].label;
+        }
+
+        function handleCollisionStart(event) {
+            event.pairs.forEach((pair) => {
+                const bodyA = pair.bodyA;
+                const bodyB = pair.bodyB;
+                const pairKey = [bodyA.id, bodyB.id].sort((a, b) => a - b).join("-");
+
+                if (pairCooldown.has(pairKey)) return;
+
+                if (isBossNegotiationPair(bodyA, bodyB)) {
+                    pairCooldown.add(pairKey);
+                    setTimeout(() => pairCooldown.delete(pairKey), 320);
+                    handleBossNegotiation(bodyA, bodyB);
+                    return;
+                }
+
+                if (bodyA.label !== "buzzword" || bodyB.label !== "buzzword") return;
+                if (bodyA.level !== bodyB.level) return;
+                if (bodyA.isMergingLocked || bodyB.isMergingLocked) return;
+                if (bodyA.level >= BUZZWORDS.length - 1) return;
+                pairCooldown.add(pairKey);
+                setTimeout(() => pairCooldown.delete(pairKey), 280);
+
+                if (Math.random() < DEV_REJECT_RATE) {
+                    rejectMerge(bodyA, bodyB);
+                    return;
+                }
+
+                performMerge(bodyA, bodyB);
+            });
+        }
+
+        function rejectMerge(bodyA, bodyB) {
+            bodyA.isMergingLocked = true;
+            bodyB.isMergingLocked = true;
+            setTimeout(() => {
+                bodyA.isMergingLocked = false;
+                bodyB.isMergingLocked = false;
+            }, 260);
+
+            const dx = bodyB.position.x - bodyA.position.x || 1;
+            const dy = bodyB.position.y - bodyA.position.y || 0.2;
+            const length = Math.hypot(dx, dy) || 1;
+            const impulse = 0.04 + bodyA.level * 0.004;
+
+            Body.applyForce(bodyA, bodyA.position, { x: -(dx / length) * impulse, y: -(dy / length) * impulse - 0.008 });
+            Body.applyForce(bodyB, bodyB.position, { x: (dx / length) * impulse, y: (dy / length) * impulse - 0.008 });
+
+            game.devRejects += 1;
+            game.combo = 0;
+            dom.gameShell.classList.remove("flash-danger");
+            void dom.gameShell.offsetWidth;
+            dom.gameShell.classList.add("flash-danger");
+            dom.status.textContent = "开发拒绝";
+            dom.report.textContent = "代码重构中，暂不支持此合并。排斥力打乱了原本布局。";
+            notify("研发负责人", "代码重构中，暂不支持此合并。", "danger");
+            playSound("reject");
+            updateHud();
+        }
+
+        function isBossNegotiationPair(bodyA, bodyB) {
+            const buzzword = bodyA.label === "buzzword" ? bodyA : bodyB.label === "buzzword" ? bodyB : null;
+            const bossBody = bodyA.label === "bossVision" ? bodyA : bodyB.label === "bossVision" ? bodyB : null;
+            if (!buzzword || !bossBody) return false;
+            const now = Date.now();
+            if (now - bossBody.spawnedAt < BOSS_SPAWN_GRACE_MS) return false;
+            if (now - bossBody.lastNegotiatedAt < BOSS_HIT_COOLDOWN_MS) return false;
+            return getBossDamageForLevel(buzzword.level) > 0;
+        }
+
+        function getBossDamageForLevel(level) {
+            if (level >= DECONSTRUCT_LEVEL) return BOSS_PATIENCE;
+            if (level === DECONSTRUCT_LEVEL - 1) return 2;
+            if (level >= 2) return 1;
+            return 0;
+        }
+
+        function handleBossNegotiation(bodyA, bodyB) {
+            if (game.gameOver) return;
+
+            const execBody = bodyA.label === "buzzword" ? bodyA : bodyB;
+            const bossBody = bodyA.label === "bossVision" ? bodyA : bodyB;
+            const damage = getBossDamageForLevel(execBody.level);
+
+            if (!damage || !Composite.get(engine.world, execBody.id, "body") || !Composite.get(engine.world, bossBody.id, "body")) {
+                return;
+            }
+
+            bossBody.lastNegotiatedAt = Date.now();
+            World.remove(engine.world, execBody);
+
+            if (damage >= bossBody.patience) {
+                bossBody.patience = 0;
+                triggerDeconstruction(execBody, bossBody);
+                return;
+            }
+
+            bossBody.patience -= damage;
+            const shrinkFactor = damage === 1 ? 0.8 : 0.66;
+            Body.scale(bossBody, shrinkFactor, shrinkFactor);
+            bossBody.radius *= shrinkFactor;
+
+            game.score += damage === 1 ? 35 : 70;
+            game.combo = 0;
+            dom.status.textContent = damage === 1 ? "轻度对齐" : "深度对齐";
+            dom.report.textContent = damage === 1
+                ? `你用「${execBody.displayLabel}」磨掉了老板球 1 点耐心值，需求体积开始回缩。`
+                : `你用「${execBody.displayLabel}」重锤对齐，老板球耐心值骤降 2 点并明显缩水。`;
+            notify("项目办", `「${bossBody.displayLabel}」剩余 ${bossBody.patience} 点耐心值。`, "warn");
+            playSound("review");
+            updateHud();
+        }
+
+        function triggerDeconstruction(bodyA, bodyB) {
+            if (game.gameOver) return;
+
+            const execBody = bodyA.label === "buzzword" ? bodyA : bodyB;
+            const bossBody = bodyA.label === "bossVision" ? bodyA : bodyB;
+
+            if (!Composite.get(engine.world, bossBody.id, "body")) {
+                return;
+            }
+
+            const centerX = (execBody.position.x + bossBody.position.x) / 2;
+            const centerY = (execBody.position.y + bossBody.position.y) / 2;
+            const fragmentCount = 3 + Math.floor(Math.random() * 3);
+
+            if (Composite.get(engine.world, execBody.id, "body")) {
+                World.remove(engine.world, execBody);
+            }
+            World.remove(engine.world, bossBody);
+
+            for (let index = 0; index < fragmentCount; index += 1) {
+                const fragmentLevel = Math.random() < 0.55 ? 0 : 1;
+                const angle = (Math.PI * 2 * index) / fragmentCount + Math.random() * 0.45;
+                const distance = 18 + Math.random() * 16;
+                const spawnX = clamp(centerX + Math.cos(angle) * distance, 30, boardWidth - 30);
+                const spawnY = clamp(centerY + Math.sin(angle) * distance, 88, boardHeight - 42);
+                const fragment = createKeywordBody(spawnX, spawnY, fragmentLevel);
+                World.add(engine.world, fragment);
+                Body.setVelocity(fragment, {
+                    x: Math.cos(angle) * (2.3 + Math.random() * 1.4),
+                    y: Math.sin(angle) * (2.1 + Math.random() * 1.3) - 1.8
+                });
+            }
+
+            game.deconstructions += 1;
+            game.score += 90;
+            game.combo = 0;
+            dom.status.textContent = "愿景拆解";
+            dom.report.textContent = `你用「${execBody.displayLabel}」拆掉了老板的「${bossBody.displayLabel}」，并把它分解成可排期的小任务。`;
+            notify("项目办", `执行力生效：${bossBody.displayLabel} 已被拆解为 ${fragmentCount} 个可落地事项。`, "success");
+            playSound("deconstruct");
+            updateHud();
+        }
+
+        function performMerge(bodyA, bodyB) {
+            if (game.gameOver) return;
+
+            const nextLevel = bodyA.level + 1;
+            const mergeX = (bodyA.position.x + bodyB.position.x) / 2;
+            const mergeY = (bodyA.position.y + bodyB.position.y) / 2;
+
+            bodyA.isMergingLocked = true;
+            bodyB.isMergingLocked = true;
+
+            World.remove(engine.world, bodyA);
+            World.remove(engine.world, bodyB);
+
+            if (nextLevel < BUZZWORDS.length) {
+                const newBody = createKeywordBody(mergeX, mergeY, nextLevel);
+                World.add(engine.world, newBody);
+                Body.setVelocity(newBody, { x: (bodyA.velocity.x + bodyB.velocity.x) * 0.2, y: -3.2 });
+                game.score += BUZZWORDS[nextLevel].score;
+                game.highestLevel = Math.max(game.highestLevel, nextLevel);
+            } else {
+                game.score += BUZZWORDS[BUZZWORDS.length - 1].score;
+                game.highestLevel = BUZZWORDS.length - 1;
+            }
+
+            game.combo += 1;
+            game.mergeTimestamps.push(Date.now());
+            game.mergeTimestamps = game.mergeTimestamps.filter((stamp) => Date.now() - stamp <= COMBO_RESCUE_WINDOW_MS);
+            if (game.combo >= 2) {
+                game.bossFavor += 1;
+                notify("老板", `这个“${BUZZWORDS[Math.min(nextLevel, BUZZWORDS.length - 1)].label}”写得好，老板对你的好感度 +1。`, "success");
+            } else {
+                notify("策略助手", `需求升级为「${BUZZWORDS[Math.min(nextLevel, BUZZWORDS.length - 1)].label}」`, "success");
+            }
+
+            if (nextLevel >= 4) {
+                triggerBossVision("高阶关键词引发老板拍脑袋");
+            }
+
+            maybeTriggerComboRelief();
+            maybeTriggerReviewMeeting();
+            playSound("merge");
+            dom.status.textContent = nextLevel >= 8 ? "愿景暴走" : "合成成功";
+            dom.report.textContent = `你成功把两个“${BUZZWORDS[bodyA.level].label}”包装成了更大的故事。`;
+            updateHud();
+        }
+
+        function maybeTriggerReviewMeeting() {
+            if (game.score < reviewThreshold) return;
+
+            const bodies = Composite.allBodies(engine.world).filter((body) => body.label === "buzzword" && body.level <= 2);
+            bodies.forEach((body) => World.remove(engine.world, body));
+            reviewThreshold += REVIEW_THRESHOLD_STEP;
+
+            notify("项目办", "需求评审会通过，所有 L3 以下需求已被清理，团队获得短暂喘息。", "warn");
+            dom.status.textContent = "需求瘦身";
+            dom.report.textContent = "评审会裁掉了低价值事项，棋盘暂时变得清爽。";
+            playSound("review");
+        }
+
+        function maybeTriggerBossVision() {
+            if (game.gameOver) return;
+            if (game.bossSpawnPaused) return;
+            if (Date.now() - bossCountdownStartedAt < BOSS_INTERVAL_MS) return;
+            triggerBossVision("例行战略刷新");
+        }
+
+        function triggerBossVision(reason) {
+            if (game.gameOver) return;
+            if (game.bossSpawnPaused) return;
+
+            bossCountdownStartedAt = Date.now();
+            const x = 72 + Math.random() * (boardWidth - 144);
+            const bossBall = createBossBall(x);
+            World.add(engine.world, bossBall);
+
+            dom.shell.classList.remove("shake");
+            void dom.shell.offsetWidth;
+            dom.shell.classList.add("shake");
+
+            notify("老板", `${reason}：把“${bossBall.displayLabel}”也加进去，明早我要看版本。`, "warn");
+            dom.status.textContent = "战略插队";
+            dom.report.textContent = "一个不可删除的战略方向从天而降，原有布局被迫改线。";
+            playSound("boss");
+            updateHud();
+        }
+
+        function maybeTriggerDesignerChaos() {
+            if (game.gameOver) return;
+            designerCountdownStartedAt = Date.now();
+
+            const candidates = Composite.allBodies(engine.world).filter((body) => body.label === "buzzword");
+            if (!candidates.length) return;
+
+            const target = candidates[Math.floor(Math.random() * candidates.length)];
+            let ticks = 0;
+            const totalTicks = 20;
+            const scalePerTick = Math.pow(Math.pow(1.05, 5), 1 / totalTicks);
+
+            const growthTimer = setInterval(() => {
+                if (game.gameOver || !Composite.get(engine.world, target.id, "body")) {
+                    clearInterval(growthTimer);
+                    return;
+                }
+
+                Body.scale(target, scalePerTick, scalePerTick);
+                target.radius *= scalePerTick;
+                ticks += 1;
+
+                if (ticks >= totalTicks) {
+                    clearInterval(growthTimer);
+                }
+            }, 250);
+
+            notify("设计师", `“${target.displayLabel}”这里需要更多留白，球体已进入像素级膨胀。`, "warn");
+            dom.status.textContent = "视觉拉伸";
+            dom.report.textContent = "设计坚持让某个模块更大一点，空间进一步被侵占。";
+            playSound("designer");
+        }
+
+        function drawOverlay() {
+            const ctx = render.context;
+            const bodies = Composite.allBodies(engine.world);
+
+            ctx.save();
+            ctx.textAlign = "center";
+            ctx.textBaseline = "middle";
+
+            bodies.forEach((body) => {
+                if (body.label !== "buzzword" && body.label !== "bossVision") return;
+
+                ctx.save();
+                ctx.translate(body.position.x, body.position.y);
+                ctx.rotate(body.angle);
+
+                const isBoss = body.label === "bossVision";
+                const baseSize = isBoss ? 13 : Math.max(11, Math.min(16, body.radius / 4.7));
+                const maxWidth = body.radius * (isBoss ? 1.55 : 1.45);
+
+                if (!isBoss && body.level === BUZZWORDS.length - 1) {
+                    ctx.shadowColor = "rgba(251, 191, 36, 0.65)";
+                    ctx.shadowBlur = 18;
+                    ctx.beginPath();
+                    ctx.arc(0, 0, body.radius * 0.98, 0, Math.PI * 2);
+                    ctx.strokeStyle = "rgba(255, 232, 153, 0.55)";
+                    ctx.lineWidth = 3;
+                    ctx.stroke();
+                    drawGlowParticles(ctx, body.radius);
+                }
+
+                if (isBoss) {
+                    const metallic = ctx.createLinearGradient(-body.radius, -body.radius, body.radius, body.radius);
+                    metallic.addColorStop(0, "rgba(255,255,255,0.85)");
+                    metallic.addColorStop(0.25, "rgba(225,231,240,0.95)");
+                    metallic.addColorStop(0.65, "rgba(136,149,170,0.92)");
+                    metallic.addColorStop(1, "rgba(74,85,104,0.9)");
+                    ctx.fillStyle = metallic;
+                    ctx.beginPath();
+                    ctx.arc(0, 0, body.radius, 0, Math.PI * 2);
+                    ctx.fill();
+                    ctx.strokeStyle = "rgba(255,255,255,0.7)";
+                    ctx.lineWidth = 2;
+                    ctx.stroke();
+
+                    if (body.isPostponed) {
+                        ctx.fillStyle = "rgba(255,255,255,0.18)";
+                        ctx.beginPath();
+                        ctx.arc(0, 0, body.radius * 0.96, 0, Math.PI * 2);
+                        ctx.fill();
+                    }
+                }
+
+                ctx.fillStyle = isBoss ? "#1f2937" : body.level >= 6 ? "#0f172a" : "#111827";
+                ctx.font = `700 ${baseSize}px system-ui, "Microsoft YaHei", sans-serif`;
+                wrapText(ctx, body.displayLabel, maxWidth, baseSize + 2);
+
+                if (isBoss) {
+                    ctx.fillStyle = "#334155";
+                    ctx.font = '700 11px system-ui, "Microsoft YaHei", sans-serif';
+                    ctx.fillText(`耐心 ${Math.max(0, body.patience)}/${body.maxPatience}`, 0, body.radius * 0.58);
+                    if (body.isPostponed) {
+                        ctx.fillStyle = "#1d4ed8";
+                        ctx.fillText("已排到下季度", 0, -body.radius * 0.66);
+                    }
+                }
+                ctx.restore();
+            });
+
+            drawAimGuide(ctx);
+            ctx.restore();
+        }
+
+        function drawGlowParticles(ctx, radius) {
+            const time = Date.now() * 0.003;
+            for (let i = 0; i < 8; i += 1) {
+                const angle = time + i * (Math.PI / 4);
+                const distance = radius + 10 + Math.sin(time * 1.3 + i) * 4;
+                ctx.beginPath();
+                ctx.arc(Math.cos(angle) * distance, Math.sin(angle) * distance, 2.5, 0, Math.PI * 2);
+                ctx.fillStyle = "rgba(255, 230, 120, 0.9)";
+                ctx.fill();
+            }
+        }
+
+        function drawAimGuide(ctx) {
+            if (game.gameOver || game.panicMode) return;
+
+            const config = BUZZWORDS[game.nextLevel];
+            ctx.save();
+            ctx.beginPath();
+            ctx.setLineDash([4, 6]);
+            ctx.moveTo(mouseX, 20);
+            ctx.lineTo(mouseX, dropY - config.radius - 8);
+            ctx.strokeStyle = "rgba(37, 99, 235, 0.35)";
+            ctx.lineWidth = 2;
+            ctx.stroke();
+            ctx.setLineDash([]);
+
+            ctx.globalAlpha = 0.32;
+            ctx.beginPath();
+            ctx.arc(mouseX, dropY, config.radius, 0, Math.PI * 2);
+            ctx.fillStyle = config.color;
+            ctx.fill();
+            ctx.strokeStyle = "rgba(37, 99, 235, 0.4)";
+            ctx.lineWidth = 2;
+            ctx.stroke();
+            ctx.restore();
+        }
+
+        function wrapText(ctx, text, maxWidth, lineHeight) {
+            const chars = text.split("");
+            const lines = [];
+            let current = "";
+
+            chars.forEach((char) => {
+                const test = current + char;
+                if (ctx.measureText(test).width > maxWidth && current) {
+                    lines.push(current);
+                    current = char;
+                } else {
+                    current = test;
+                }
+            });
+
+            if (current) lines.push(current);
+            const startY = -((lines.length - 1) * lineHeight) / 2;
+            lines.slice(0, 3).forEach((line, index) => {
+                ctx.fillText(line, 0, startY + index * lineHeight);
+            });
+        }
+
+        function updateRuntimeStatus() {
+            game.mergeTimestamps = game.mergeTimestamps.filter((stamp) => Date.now() - stamp <= COMBO_RESCUE_WINDOW_MS);
+            game.combo = game.mergeTimestamps.length;
+            updateHud();
+            refreshBossPressureState();
+            updateChaosTimer();
+            updateSkillButtons();
+        }
+
+        function updateChaosTimer() {
+            const bossRemaining = Math.max(0, Math.ceil((BOSS_INTERVAL_MS - (Date.now() - bossCountdownStartedAt)) / 1000));
+            dom.chaosTimer.textContent = game.bossSpawnPaused
+                ? "线上故障处理中：老板暂缓插队"
+                : `下次老板拍脑袋: ${bossRemaining}s`;
+        }
+
+        function checkOverflowState() {
+            if (game.gameOver) return;
+
+            const bodies = Composite.allBodies(engine.world).filter((body) => !body.isStatic && (body.label === "buzzword" || body.label === "bossVision"));
+            const overflowing = bodies.some((body) => body.position.y - body.radius < warningLineY);
+
+            if (!overflowing) {
+                overflowStartedAt = null;
+                return;
+            }
+
+            if (!overflowStartedAt) {
+                overflowStartedAt = Date.now();
+                dom.status.textContent = "红线预警";
+                dom.report.textContent = "需求堆积已逼近逻辑崩溃线，请尽快完成高阶合成。";
+                return;
+            }
+
+            const duration = Date.now() - overflowStartedAt;
+            if (duration > 3000) {
+                endGame();
+            } else {
+                dom.status.textContent = `红线预警 ${((3000 - duration) / 1000).toFixed(1)}s`;
+            }
+        }
+
+        function endGame() {
+            game.gameOver = true;
+            playSound("gameover");
+            const playerName = (dom.playerName.value || "产品经理").trim() || "产品经理";
+            dom.pipTitle.textContent = `关于 ${playerName} 的绩效改进计划 (PIP)`;
+            dom.pipScore.textContent = `${game.totalDrops}`;
+            dom.pipFavor.textContent = `${game.bossFavor}`;
+            dom.pipCrash.textContent = `${game.devRejects}`;
+            dom.pipEval.textContent = getEvaluationText();
+            dom.gameOver.classList.add("visible");
+            notify("人力伙伴", "由于逻辑持续崩溃，系统已自动生成绩效改进计划。", "danger");
+            dom.status.textContent = "绩效考核";
+            dom.report.textContent = "项目愿景已坍塌，建议阅读 PIP 后重新发起下一轮画饼。";
+        }
+
+        function getEvaluationText() {
+            if (game.score < 1200) {
+                return "最终评价：建议转行做测试。你总共向市场投放了 " + game.totalDrops + " 个伪需求，但大多数还没来得及包装成完整愿景，现场已经被战略插队和开发打回冲垮。";
+            }
+            if (game.score < 3200) {
+                return "最终评价：合格的画饼师。你成功忽悠老板 " + game.bossFavor + " 次，证明已经掌握基本叙事技巧，只是面对复杂干系人时仍容易爆仓。";
+            }
+            return "最终评价：顶级愿景架构专家 / PPT 战神。你把混乱需求堆叠成了高阶叙事资产，即使开发拒绝了 " + game.devRejects + " 次，仍然能持续维持局势。";
+        }
+
+        function restartGame() {
+            Composite.allBodies(engine.world)
+                .filter((body) => !body.isStatic)
+                .forEach((body) => World.remove(engine.world, body));
+
+            game.score = 0;
+            game.combo = 0;
+            game.totalDrops = 0;
+            game.bossFavor = 0;
+            game.devRejects = 0;
+            game.deconstructions = 0;
+            game.highestLevel = 0;
+            game.gameOver = false;
+            game.mergeTimestamps = [];
+            game.lastComboRescueAt = 0;
+            game.bossSpawnPaused = false;
+            game.bossPauseStartedAt = 0;
+            game.postponeCooldownUntil = 0;
+            game.canaryCooldownUntil = 0;
+            game.canaryCharges = 0;
+            reviewThreshold = REVIEW_THRESHOLD_STEP;
+            overflowStartedAt = null;
+            bossCountdownStartedAt = Date.now();
+            designerCountdownStartedAt = Date.now();
+            dom.gameOver.classList.remove("visible");
+            dom.status.textContent = "稳态推进";
+            dom.report.textContent = "场面可控，建议继续画饼。";
+            queueNextWord();
+            updateHud();
+            updateSkillButtons();
+            notify("工作台", "新一轮愿景构建已开始，祝你这次少被老板打断。", "success");
+        }
+
+        function dismissGameOver() {
+            dom.gameOver.classList.remove("visible");
+        }
+
+        function syncBoardMetrics() {
+            const rect = dom.gameShell.getBoundingClientRect();
+            boardWidth = Math.max(440, Math.round(rect.width || BOARD_WIDTH));
+            boardHeight = Math.max(420, Math.round(rect.height || DEFAULT_BOARD_HEIGHT));
+            warningLineY = Math.round(boardHeight * 0.191);
+            dropY = Math.max(72, Math.round(boardHeight * 0.113));
+
+            dom.gameCanvas.style.width = boardWidth + "px";
+            dom.gameCanvas.style.height = boardHeight + "px";
+            if (render && render.canvas) {
+                render.canvas.style.width = boardWidth + "px";
+                render.canvas.style.height = boardHeight + "px";
+            }
+            dom.warningLine.style.top = warningLineY + "px";
+            dom.warningLabel.style.top = warningLineY - 20 + "px";
+            mouseX = clamp(mouseX, 28, boardWidth - 28);
+        }
+
+        function resizeBoard() {
+            syncBoardMetrics();
+
+            if (!render) return;
+
+            render.options.width = boardWidth;
+            render.options.height = boardHeight;
+            render.bounds.max.x = boardWidth;
+            render.bounds.max.y = boardHeight;
+            render.canvas.width = boardWidth * (window.devicePixelRatio || 1);
+            render.canvas.height = boardHeight * (window.devicePixelRatio || 1);
+
+            if (walls) {
+                Composite.remove(engine.world, walls);
+            }
+
+            walls = createWorldBounds();
+            Composite.add(engine.world, walls);
+        }
+
+        function updateHud() {
+            dom.score.textContent = game.score;
+            dom.combo.textContent = game.combo;
+        }
+
+        function updateTransientBodies() {
+            Composite.allBodies(engine.world).forEach((body) => {
+                if (body.label === "buzzword" && body.isCanary) {
+                    const touchingBottom = body.position.y >= boardHeight - body.radius - 18;
+                    if (touchingBottom && Math.abs(body.velocity.y) < 1.3) {
+                        body.isCanary = false;
+                        body.collisionFilter.mask = COLLISION_CATEGORIES.WALL | COLLISION_CATEGORIES.KEYWORD | COLLISION_CATEGORIES.BOSS;
+                        body.render.opacity = 1;
+                        body.render.lineWidth = 2;
+                    }
+                }
+            });
+        }
+
+        function refreshBossPressureState() {
+            if (game.gameOver) return;
+
+            const activeBodies = Composite.allBodies(engine.world).filter((body) => !body.isStatic && (body.label === "buzzword" || body.label === "bossVision"));
+            if (!activeBodies.length) {
+                if (game.bossSpawnPaused) {
+                    game.bossSpawnPaused = false;
+                    bossCountdownStartedAt += Date.now() - game.bossPauseStartedAt;
+                    game.bossPauseStartedAt = 0;
+                }
+                return;
+            }
+
+            const minTop = Math.min(...activeBodies.map((body) => body.position.y - body.radius));
+            const stackRatio = (boardHeight - minTop) / boardHeight;
+            const shouldPause = stackRatio >= CRISIS_STACK_RATIO;
+
+            if (shouldPause && !game.bossSpawnPaused) {
+                game.bossSpawnPaused = true;
+                game.bossPauseStartedAt = Date.now();
+                notify("线上值班", "堆积已超过 60%，进入线上故障处理模式，老板需求暂缓投放。", "warn");
+                dom.status.textContent = "故障止血";
+                dom.report.textContent = "系统优先保命，老板球投放倒计时已暂停。";
+            } else if (!shouldPause && game.bossSpawnPaused) {
+                game.bossSpawnPaused = false;
+                bossCountdownStartedAt += Date.now() - game.bossPauseStartedAt;
+                game.bossPauseStartedAt = 0;
+                notify("线上值班", "风险回落，老板需求倒计时重新恢复。", "success");
+            }
+        }
+
+        function updateSkillButtons() {
+            const now = Date.now();
+            const postponeLeft = Math.max(0, Math.ceil((game.postponeCooldownUntil - now) / 1000));
+            dom.postponeSkillButton.disabled = postponeLeft > 0;
+            dom.postponeSkillButton.classList.toggle("active", postponeLeft === 0);
+            dom.postponeSkillMeta.textContent = postponeLeft > 0
+                ? `冷却中：${postponeLeft} 秒后可再次点击老板球。`
+                : "已就绪：直接点击场上的老板球，将其排到下季度 30 秒。";
+
+            const canaryLeft = Math.max(0, Math.ceil((game.canaryCooldownUntil - now) / 1000));
+            const canaryActive = game.canaryCharges > 0;
+            dom.canarySkillButton.disabled = canaryLeft > 0 || canaryActive;
+            dom.canarySkillButton.classList.toggle("active", canaryActive);
+            if (canaryActive) {
+                dom.canarySkillMeta.textContent = `灰度发布生效中：剩余 ${game.canaryCharges} 个穿透投放。`;
+            } else if (canaryLeft > 0) {
+                dom.canarySkillMeta.textContent = `冷却中：${canaryLeft} 秒后可再次激活 3 次穿透投放。`;
+            } else {
+                dom.canarySkillMeta.textContent = "已就绪：激活后，接下来 3 个投放球会穿过堆积区直落到底部。";
+            }
+        }
+
+        function activateCanaryRelease() {
+            if (game.gameOver || game.panicMode) return;
+            const now = Date.now();
+            if (game.canaryCharges > 0) {
+                notify("工作台", `灰度发布已开启，剩余 ${game.canaryCharges} 次穿透投放。`, "success");
+                return;
+            }
+            if (now < game.canaryCooldownUntil) {
+                notify("工作台", `灰度发布冷却中，还需 ${Math.ceil((game.canaryCooldownUntil - now) / 1000)} 秒。`, "warn");
+                return;
+            }
+
+            game.canaryCharges = CANARY_RELEASE_CHARGES;
+            game.canaryCooldownUntil = now + CANARY_RELEASE_COOLDOWN_MS;
+            dom.status.textContent = "灰度发布";
+            dom.report.textContent = "接下来的 3 个投放球会跳过主堆积区，直接沿灰度链路落到底部。";
+            notify("工作台", "灰度发布已开启，接下来 3 个投放球将具备穿透属性。", "success");
+            playSound("merge");
+            updateSkillButtons();
+        }
+
+        function applyCanaryRelease(body) {
+            body.isCanary = true;
+            body.collisionFilter.mask = COLLISION_CATEGORIES.WALL;
+            body.render.opacity = 0.45;
+            body.render.lineWidth = 1.5;
+        }
+
+        function tryUseStrategicPostponement(point) {
+            if (game.gameOver || game.panicMode || Date.now() < game.postponeCooldownUntil) return false;
+
+            const bossBody = findBossBodyAtPoint(point);
+            if (!bossBody || bossBody.isPostponed) return false;
+
+            game.postponeCooldownUntil = Date.now() + POSTPONE_COOLDOWN_MS;
+            bossBody.isPostponed = true;
+            bossBody.render.opacity = 0.45;
+            Body.scale(bossBody, 0.5, 0.5);
+            bossBody.radius *= 0.5;
+            dom.status.textContent = "战略暂缓";
+            dom.report.textContent = `你成功说服老板把「${bossBody.displayLabel}」排到下季度，它将在 30 秒内缩成半个体量。`;
+            notify("产品经理", `已将「${bossBody.displayLabel}」排期置后 30 秒。`, "success");
+            playSound("review");
+            updateSkillButtons();
+
+            setTimeout(() => {
+                if (!Composite.get(engine.world, bossBody.id, "body")) return;
+                if (!bossBody.isPostponed) return;
+                bossBody.isPostponed = false;
+                bossBody.render.opacity = 1;
+                Body.scale(bossBody, 2, 2);
+                bossBody.radius *= 2;
+                notify("老板", `下季度窗口已到，「${bossBody.displayLabel}」重新回到当前排期。`, "warn");
+            }, POSTPONE_DURATION_MS);
+            return true;
+        }
+
+        function findBossBodyAtPoint(point) {
+            const bosses = Composite.allBodies(engine.world).filter((body) => body.label === "bossVision");
+            for (let index = bosses.length - 1; index >= 0; index -= 1) {
+                const body = bosses[index];
+                const dx = point.x - body.position.x;
+                const dy = point.y - body.position.y;
+                if (Math.hypot(dx, dy) <= body.radius) {
+                    return body;
+                }
+            }
+            return null;
+        }
+
+        function maybeTriggerComboRelief() {
+            if (game.mergeTimestamps.length < 3) return;
+            const now = Date.now();
+            if (now - game.lastComboRescueAt < COMBO_RESCUE_WINDOW_MS) return;
+
+            const bosses = Composite.allBodies(engine.world).filter((body) => body.label === "bossVision");
+            if (!bosses.length) return;
+
+            const target = bosses[Math.floor(Math.random() * bosses.length)];
+            World.remove(engine.world, target);
+            game.lastComboRescueAt = now;
+            dom.status.textContent = "注意力转移";
+            dom.report.textContent = `你在 5 秒内连续完成了 3 次合成，老板暂时忘了「${target.displayLabel}」。`;
+            notify("老板", `你最近交付得太快，我刚才那个「${target.displayLabel}」先不提了。`, "success");
+            playSound("deconstruct");
+        }
+
+        function notify(author, message, type) {
+            const toast = document.createElement("div");
+            toast.className = `toast ${type || ""}`.trim();
+            toast.innerHTML = `
+                <div class="toast-head">
+                    <span>@${author}</span>
+                    <span>${new Date().toLocaleTimeString("zh-CN", { hour: "2-digit", minute: "2-digit" })}</span>
+                </div>
+                <div class="toast-body">${message}</div>
+            `;
+            dom.notifications.prepend(toast);
+
+            while (dom.notifications.children.length > 5) {
+                dom.notifications.removeChild(dom.notifications.lastChild);
+            }
+
+            const durationMap = {
+                success: 5200,
+                warn: 7600,
+                danger: 9000
+            };
+            const dismissDelay = durationMap[type] || 6200;
+            let dismissTimer = null;
+
+            const scheduleDismiss = () => {
+                dismissTimer = setTimeout(() => {
+                    toast.style.transition = "opacity 0.24s ease, transform 0.24s ease";
+                    toast.style.opacity = "0";
+                    toast.style.transform = "translateX(10px)";
+                    setTimeout(() => toast.remove(), 240);
+                }, dismissDelay);
+            };
+
+            const clearDismiss = () => {
+                if (dismissTimer) {
+                    clearTimeout(dismissTimer);
+                    dismissTimer = null;
+                }
+            };
+
+            toast.addEventListener("mouseenter", clearDismiss);
+            toast.addEventListener("mouseleave", () => {
+                clearDismiss();
+                scheduleDismiss();
+            });
+
+            scheduleDismiss();
+        }
+
+        function togglePanic(forceState) {
+            const nextState = typeof forceState === "boolean" ? forceState : !game.panicMode;
+            game.panicMode = nextState;
+            dom.panic.classList.toggle("visible", nextState);
+            dom.panic.setAttribute("aria-hidden", String(!nextState));
+        }
+
+        function unlockAudio() {
+            if (!audioContext) {
+                const AudioContextClass = window.AudioContext || window.webkitAudioContext;
+                if (!AudioContextClass) return;
+                audioContext = new AudioContextClass();
+            }
+
+            if (audioContext.state === "suspended") {
+                audioContext.resume();
+            }
+        }
+
+        function playSound(type) {
+            if (!audioContext) return;
+
+            const map = {
+                drop: { freq: 340, duration: 0.06, wave: "square", gain: 0.02 },
+                merge: { freq: 780, duration: 0.12, wave: "triangle", gain: 0.035 },
+                boss: { freq: 510, duration: 0.24, wave: "sine", gain: 0.05 },
+                reject: { freq: 190, duration: 0.18, wave: "sawtooth", gain: 0.03 },
+                designer: { freq: 620, duration: 0.14, wave: "triangle", gain: 0.02 },
+                review: { freq: 880, duration: 0.12, wave: "triangle", gain: 0.028 },
+                deconstruct: { freq: 660, duration: 0.22, wave: "square", gain: 0.032 },
+                gameover: { freq: 130, duration: 0.5, wave: "sine", gain: 0.04 }
+            };
+
+            const config = map[type];
+            if (!config) return;
+
+            const now = audioContext.currentTime;
+            const osc = audioContext.createOscillator();
+            const gain = audioContext.createGain();
+
+            osc.type = config.wave;
+            osc.frequency.setValueAtTime(config.freq, now);
+            if (type === "gameover") {
+                osc.frequency.exponentialRampToValueAtTime(70, now + config.duration);
+            } else if (type === "boss") {
+                osc.frequency.linearRampToValueAtTime(config.freq - 160, now + config.duration);
+            } else if (type === "deconstruct") {
+                osc.frequency.linearRampToValueAtTime(config.freq + 180, now + config.duration * 0.45);
+                osc.frequency.linearRampToValueAtTime(config.freq - 220, now + config.duration);
+            }
+
+            gain.gain.setValueAtTime(config.gain, now);
+            gain.gain.exponentialRampToValueAtTime(0.001, now + config.duration);
+
+            osc.connect(gain);
+            gain.connect(audioContext.destination);
+            osc.start(now);
+            osc.stop(now + config.duration);
+        }
+
+        function clamp(value, min, max) {
+            return Math.max(min, Math.min(max, value));
+        }
+    </script>
+</body>
+</html>
