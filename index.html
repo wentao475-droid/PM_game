@@ -887,12 +887,17 @@
         }
 
         body.mobile-version .browser-top {
-            padding: calc(6px + var(--safe-top)) calc(10px + var(--safe-right)) 6px calc(10px + var(--safe-left));
+            padding: calc(4px + var(--safe-top)) calc(8px + var(--safe-right)) 4px calc(8px + var(--safe-left));
             position: sticky;
             top: 0;
             z-index: 18;
             backdrop-filter: blur(16px);
             background: rgba(244, 247, 251, 0.9);
+            display: flex;
+            flex-direction: column;
+            gap: 4px;
+            max-height: calc(var(--app-height) * 0.12);
+            overflow: hidden;
         }
 
         body.mobile-version .chrome-dots {
@@ -906,40 +911,40 @@
         }
 
         body.mobile-version .inline-notice {
-            min-height: 34px;
-            border-radius: 9px;
-            padding: 0 10px;
+            min-height: 28px;
+            border-radius: 8px;
+            padding: 0 8px;
         }
 
         body.mobile-version .inline-notice-author {
-            font-size: 11px;
+            font-size: 10px;
         }
 
         body.mobile-version .inline-notice-text {
-            font-size: 11px;
+            font-size: 10px;
         }
 
         body.mobile-version .mobile-actions {
             display: grid;
             grid-template-columns: repeat(4, minmax(0, 1fr));
-            gap: 6px;
-            margin-top: 6px;
+            gap: 4px;
+            margin-top: 0;
         }
 
         body.mobile-version .utility-btn {
-            min-height: 34px;
-            padding: 0 8px;
-            border-radius: 10px;
-            font-size: 13px;
+            min-height: 28px;
+            padding: 0 6px;
+            border-radius: 8px;
+            font-size: 11px;
         }
 
         body.mobile-version .shell-content {
             display: flex;
             flex-direction: column;
-            gap: 8px;
+            gap: 4px;
             height: 100%;
             min-height: 0;
-            padding: 10px calc(12px + var(--safe-right)) calc(12px + var(--safe-bottom)) calc(12px + var(--safe-left));
+            padding: 6px calc(8px + var(--safe-right)) calc(8px + var(--safe-bottom)) calc(8px + var(--safe-left));
             overflow-x: hidden;
             overflow-y: hidden;
         }
@@ -972,26 +977,33 @@
             flex: 1;
             display: flex;
             flex-direction: column;
+            overflow: hidden;
         }
 
         body.mobile-version .toolbar {
-            flex-direction: column;
-            align-items: stretch;
-            gap: 6px;
-            margin-bottom: 8px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            margin-bottom: 4px;
+            min-height: 0;
+            max-height: calc(var(--app-height) * 0.08);
+            overflow: hidden;
         }
 
         body.mobile-version .toolbar-left {
             display: flex;
             align-items: center;
-            justify-content: space-between;
-            gap: 12px;
+            justify-content: flex-start;
+            gap: 8px;
+            min-width: 0;
+            flex: 1;
         }
 
         body.mobile-version .toolbar-left h1 {
-            font-size: 18px;
+            font-size: 14px;
             margin-bottom: 0;
-            line-height: 1.05;
+            line-height: 1;
+            flex: 0 0 auto;
         }
 
         body.mobile-version .toolbar-left p {
@@ -1000,68 +1012,59 @@
 
         body.mobile-version .stats-bar {
             display: flex;
-            align-items: stretch;
+            align-items: center;
+            justify-content: space-between;
             gap: 8px;
-            padding: 7px 8px;
-            border-radius: 16px;
-            background: rgba(246, 249, 253, 0.92);
-            border: 1px solid rgba(214, 223, 237, 0.95);
-            box-shadow: 0 10px 24px rgba(15, 23, 42, 0.06);
-            backdrop-filter: blur(14px);
+            min-width: 0;
+            flex: 1;
+            padding: 0;
+            border: 0;
+            background: transparent;
+            box-shadow: none;
+            backdrop-filter: none;
         }
 
         body.mobile-version .stats-inline {
             min-width: 0;
             flex: 1;
-            display: grid;
-            grid-template-columns: repeat(3, minmax(0, 1fr));
-            gap: 6px;
-        }
-
-        body.mobile-version .stat-chip {
-            min-width: 0;
             display: flex;
-            flex-direction: column;
-            justify-content: center;
+            align-items: center;
+            gap: 4px;
+            white-space: nowrap;
+            overflow: hidden;
+            font-size: 11px;
+            line-height: 1.1;
+            color: #5b6778;
+        }
+
+        body.mobile-version .stats-copy-item,
+        body.mobile-version .stats-separator {
+            display: flex;
+            align-items: baseline;
             gap: 2px;
-            padding: 7px 9px;
-            border-radius: 12px;
-            background: rgba(255, 255, 255, 0.92);
-            border: 1px solid rgba(219, 228, 242, 0.95);
+            flex: 0 0 auto;
         }
 
-        body.mobile-version .stat-chip-label {
-            font-size: 10px;
-            color: #8390a3;
-            letter-spacing: 0.03em;
-            text-transform: uppercase;
+        body.mobile-version .stats-copy-item strong,
+        body.mobile-version .stats-copy-item span {
+            font-size: 11px;
+            line-height: 1.1;
         }
 
-        body.mobile-version .stat-chip strong,
-        body.mobile-version .stat-chip #status-text {
-            min-width: 0;
-            min-height: 0;
-            margin: 0;
-            font-size: 15px;
+        body.mobile-version .stats-copy-item strong,
+        body.mobile-version .stats-copy-item #status-text {
+            color: #1f2a37;
             font-weight: 800;
-            line-height: 1.15;
-            white-space: nowrap;
-            overflow: hidden;
-            text-overflow: ellipsis;
-            display: block;
         }
 
-        body.mobile-version .stat-chip-status {
-            position: relative;
+        body.mobile-version .stats-separator {
+            color: #9aa5b5;
         }
 
-        body.mobile-version .stat-chip-sub {
+        body.mobile-version .stats-chaos {
+            display: none;
             font-size: 10px;
-            line-height: 1.15;
             color: #718096;
-            white-space: nowrap;
-            overflow: hidden;
-            text-overflow: ellipsis;
         }
 
         body.mobile-version .board-row {
@@ -1069,46 +1072,43 @@
             flex: 1;
             min-height: 0;
             height: 100%;
+            overflow: hidden;
         }
 
         body.mobile-version .jira-column {
             width: 100%;
-            border-radius: 16px;
+            border-radius: 12px;
             height: 100%;
             min-height: 0;
             display: flex;
             flex-direction: column;
             contain: layout paint;
             box-shadow: none;
+            overflow: hidden;
         }
 
         body.mobile-version .column-header {
-            display: grid;
-            grid-template-columns: minmax(0, 1fr) auto minmax(0, 1fr);
-            align-items: center;
-            gap: 8px;
-            padding: 10px 12px 8px;
+            display: none;
         }
 
         body.mobile-version .column-title,
         body.mobile-version .column-sidecopy {
-            min-width: 0;
-            overflow: hidden;
-            text-overflow: ellipsis;
+            display: none;
         }
 
         body.mobile-version .next-trigger {
             position: relative;
-            min-width: 118px;
-            max-width: 138px;
-            padding: 8px 10px 10px;
+            flex: 0 0 auto;
+            min-width: 88px;
+            max-width: 96px;
+            padding: 4px 6px 6px;
             border: 1px solid rgba(216, 228, 251, 0.98);
-            border-radius: 16px;
+            border-radius: 12px;
             background: rgba(255, 255, 255, 0.96);
             text-align: center;
             font: inherit;
             color: #1f2a37;
-            box-shadow: 0 10px 24px rgba(15, 23, 42, 0.06);
+            box-shadow: none;
             overflow: hidden;
         }
 
@@ -1125,7 +1125,7 @@
             position: relative;
             z-index: 1;
             display: block;
-            font-size: 10px;
+            font-size: 9px;
             font-weight: 700;
             color: #6b778c;
             letter-spacing: 0.04em;
@@ -1135,7 +1135,7 @@
         body.mobile-version .next-preview-shell {
             position: relative;
             z-index: 1;
-            margin: 6px auto 0;
+            margin: 3px auto 0;
             width: 100%;
             display: flex;
             justify-content: center;
@@ -1143,10 +1143,10 @@
 
         body.mobile-version .next-progress {
             position: absolute;
-            left: 8px;
-            right: 8px;
-            top: -2px;
-            height: 3px;
+            left: 6px;
+            right: 6px;
+            top: -1px;
+            height: 2px;
             border-radius: 999px;
             background: rgba(37, 99, 235, 0.12);
             overflow: hidden;
@@ -1165,11 +1165,11 @@
         }
 
         body.mobile-version .next-preview-ball {
-            width: 46px;
-            height: 46px;
+            width: 32px;
+            height: 32px;
             border-radius: 50%;
-            border: 2px solid rgba(255, 255, 255, 0.92);
-            box-shadow: 0 8px 20px rgba(15, 23, 42, 0.12);
+            border: 1.5px solid rgba(255, 255, 255, 0.92);
+            box-shadow: 0 6px 14px rgba(15, 23, 42, 0.1);
             transition: opacity 0.18s ease, filter 0.18s ease, transform 0.18s ease, box-shadow 0.18s ease;
         }
 
@@ -1184,8 +1184,8 @@
             position: relative;
             z-index: 1;
             display: block;
-            margin-top: 6px;
-            font-size: 12px;
+            margin-top: 4px;
+            font-size: 10px;
             font-weight: 800;
             line-height: 1.15;
             color: #1f2a37;
@@ -1195,16 +1195,7 @@
         }
 
         body.mobile-version .next-skill-meta {
-            position: relative;
-            z-index: 1;
-            display: block;
-            margin-top: 3px;
-            font-size: 10px;
-            line-height: 1.15;
-            color: #6b7b92;
-            white-space: nowrap;
-            overflow: hidden;
-            text-overflow: ellipsis;
+            display: none;
         }
 
         body.mobile-version #game-shell {
@@ -1212,7 +1203,7 @@
             min-height: 0;
             height: auto;
             touch-action: none;
-            border-radius: 0 0 16px 16px;
+            border-radius: 12px;
             overflow: hidden;
             box-shadow: none;
             contain: layout paint size;
@@ -1221,23 +1212,25 @@
         }
 
         body.mobile-version .drop-hint {
-            top: 14px;
-            left: 14px;
-            right: 14px;
-            transform: none;
-            width: auto;
+            inset: 0;
             padding: 0;
-            gap: 0;
-            justify-content: flex-end;
+            justify-content: center;
+            align-items: center;
+            transition: opacity 0.4s ease;
         }
 
         body.mobile-version .drop-pill {
-            min-height: 42px;
-            padding: 9px 12px;
+            min-height: 0;
+            padding: 8px 12px;
             font-size: 12px;
-            border-radius: 14px;
-            background: rgba(255, 255, 255, 0.96);
-            box-shadow: 0 10px 24px rgba(15, 23, 42, 0.12);
+            border-radius: 999px;
+            background: rgba(255, 255, 255, 0.78);
+            box-shadow: 0 8px 18px rgba(15, 23, 42, 0.08);
+            backdrop-filter: blur(10px);
+        }
+
+        body.mobile-version .drop-hint.fade-out {
+            opacity: 0;
         }
 
         body.mobile-version .interference-panel {
@@ -1376,72 +1369,38 @@
 
             body.mobile-version .toolbar {
                 gap: 6px;
-                margin-bottom: 6px;
+                margin-bottom: 4px;
             }
 
             body.mobile-version .toolbar-left h1 {
-                font-size: 16px;
+                font-size: 13px;
             }
 
             body.mobile-version .stats-inline {
-                gap: 5px;
-            }
-
-            body.mobile-version .stats-bar {
-                padding: 6px;
-                gap: 6px;
-            }
-
-            body.mobile-version .stat-chip-label,
-            body.mobile-version .stat-chip-sub {
-                font-size: 10px;
-                line-height: 1.2;
-            }
-
-            body.mobile-version .stat-chip strong,
-            body.mobile-version .stat-chip #status-text {
-                font-size: 14px;
+                gap: 3px;
             }
 
             body.mobile-version .drop-hint {
-                top: 10px;
-                left: 10px;
-                right: 10px;
-                gap: 0;
-                flex-direction: row;
-                align-items: center;
-                justify-content: flex-end;
+                padding: 0 18px;
             }
 
             body.mobile-version .drop-pill {
-                min-height: 34px;
                 padding: 7px 10px;
                 font-size: 11px;
-                border-radius: 12px;
-            }
-
-            body.mobile-version .drop-pill:last-child {
-                flex: 0 0 auto;
-                white-space: nowrap;
             }
 
             body.mobile-version .next-trigger {
-                min-width: 108px;
-                max-width: 124px;
-                padding: 7px 8px 9px;
+                min-width: 82px;
+                max-width: 90px;
+                padding: 4px 6px 6px;
             }
 
             body.mobile-version .next-preview-ball {
-                width: 42px;
-                height: 42px;
+                width: 30px;
+                height: 30px;
             }
 
             body.mobile-version .next-label {
-                font-size: 11px;
-            }
-
-            body.mobile-version .next-skill-meta,
-            body.mobile-version .column-sidecopy {
                 font-size: 9px;
             }
 
@@ -1449,6 +1408,29 @@
                 flex: 1;
                 min-height: 0;
                 height: auto;
+            }
+        }
+
+        @media (max-width: 500px) {
+            body.mobile-version .warning-label {
+                right: 10px;
+                padding: 3px 7px;
+                font-size: 10px;
+            }
+
+            body.mobile-version .boss-action-button,
+            body.mobile-version .boss-action-tip {
+                max-width: calc(100% - 24px);
+            }
+
+            body.mobile-version .boss-action-button {
+                min-height: 30px;
+                padding: 0 10px;
+                font-size: 11px;
+            }
+
+            body.mobile-version .boss-action-tip {
+                font-size: 11px;
             }
         }
 
@@ -1551,38 +1533,27 @@
                         </div>
                         <div class="stats-bar">
                             <div class="stats-inline">
-                                <div class="stat-chip">
-                                    <span class="stat-chip-label">产能</span>
-                                    <strong id="score">0</strong>
-                                </div>
-                                <div class="stat-chip">
-                                    <span class="stat-chip-label">连击</span>
-                                    <strong id="combo">0</strong>
-                                </div>
-                                <div class="stat-chip stat-chip-status">
-                                    <span class="stat-chip-label">状态</span>
-                                    <span id="status-text">稳态</span>
-                                    <span class="stat-chip-sub" id="chaos-timer">老板的拍脑袋 45s</span>
-                                </div>
+                                <span class="stats-copy-item"><span>产能:</span><strong id="score">0</strong></span>
+                                <span class="stats-separator">|</span>
+                                <span class="stats-copy-item"><span>连击:</span><strong id="combo">0</strong></span>
+                                <span class="stats-separator">|</span>
+                                <span class="stats-copy-item"><span>状态:</span><span id="status-text">稳态</span></span>
                             </div>
+                            <span class="stats-chaos" id="chaos-timer">老板的拍脑袋 45s</span>
+                            <button class="next-trigger" id="next-trigger" type="button" aria-label="灰度发布入口">
+                                <span class="next-trigger-title">Next</span>
+                                <span class="next-preview-shell">
+                                    <span class="next-progress" id="next-progress"></span>
+                                    <span class="next-preview-ball" id="next-preview-ball"></span>
+                                </span>
+                                <span class="next-label" id="next-label">修复Bug</span>
+                                <span class="next-skill-meta" id="next-skill-meta">点击开启灰度发布</span>
+                            </button>
                         </div>
                     </div>
 
                     <div class="board-row">
                         <section class="jira-column">
-                            <div class="column-header">
-                                <span class="column-title">需求池</span>
-                                <button class="next-trigger" id="next-trigger" type="button" aria-label="灰度发布入口">
-                                    <span class="next-trigger-title">待办 Next</span>
-                                    <span class="next-preview-shell">
-                                        <span class="next-progress" id="next-progress"></span>
-                                        <span class="next-preview-ball" id="next-preview-ball"></span>
-                                    </span>
-                                    <span class="next-label" id="next-label">修复Bug</span>
-                                    <span class="next-skill-meta" id="next-skill-meta">点击开启灰度发布</span>
-                                </button>
-                                <span class="column-sidecopy">对象关联式交互</span>
-                            </div>
                             <div id="game-shell">
                                 <div class="warning-label">逻辑红线</div>
                                 <div class="warning-line"></div>
@@ -1726,6 +1697,7 @@
         const MIN_BOARD_HEIGHT = 360;
         const MOBILE_BALL_SCALE = 1.12;
         const MOBILE_BOSS_RADIUS = 60;
+        const WARNING_LINE_RATIO = 0.15;
         const DESIGNER_TOTAL_TICKS = 16;
         const DESIGNER_TOTAL_GROWTH = 1.1;
         const COLLISION_CATEGORIES = {
@@ -1756,6 +1728,7 @@
             notifications: document.getElementById("notifications"),
             warningLine: document.querySelector(".warning-line"),
             warningLabel: document.querySelector(".warning-label"),
+            dropHint: document.querySelector(".drop-hint"),
             inlineNotice: document.getElementById("inline-notice"),
             inlineNoticeAuthor: document.getElementById("inline-notice-author"),
             inlineNoticeText: document.getElementById("inline-notice-text"),
@@ -1819,6 +1792,7 @@
         let isGrayReleaseActive = window.isGrayReleaseActive;
         let activeBossBallId = null;
         let bossTipTimer = 0;
+        let dropHintTimer = 0;
 
         const game = {
             score: 0,
@@ -1846,6 +1820,7 @@
         syncMobileHeaderOffset();
         syncMobileDockOffset(false);
         syncBoardMetrics();
+        showDropHint();
 
         const engine = Engine.create();
         engine.gravity.y = 0.96;
@@ -2697,6 +2672,7 @@
             queueNextWord();
             updateHud();
             updateSkillButtons();
+            showDropHint();
             notify("工作台", "新一轮愿景构建已开始，祝你这次少被老板打断。", "success");
         }
 
@@ -2708,7 +2684,7 @@
             const rect = dom.gameShell.getBoundingClientRect();
             boardWidth = Math.max(MIN_BOARD_WIDTH, Math.round(rect.width || BOARD_WIDTH));
             boardHeight = Math.max(MIN_BOARD_HEIGHT, Math.round(rect.height || DEFAULT_BOARD_HEIGHT));
-            warningLineY = Math.round(boardHeight * 0.2);
+            warningLineY = Math.round(boardHeight * WARNING_LINE_RATIO);
             dropY = Math.max(72, Math.round(boardHeight * 0.113));
 
             // Lock the board to the measured viewport slice so surrounding UI changes
@@ -2720,11 +2696,21 @@
                 render.canvas.style.width = boardWidth + "px";
                 render.canvas.style.height = boardHeight + "px";
             }
-            dom.warningLine.style.top = warningLineY + "px";
-            dom.warningLabel.style.top = warningLineY - 20 + "px";
+            const warningTopPercent = `${(WARNING_LINE_RATIO * 100).toFixed(2)}%`;
+            dom.warningLine.style.top = warningTopPercent;
+            dom.warningLabel.style.top = `calc(${warningTopPercent} - 18px)`;
             const padding = getDropClampPadding();
             mouseX = clamp(mouseX, padding, boardWidth - padding);
             syncBossActionOverlay();
+        }
+
+        function showDropHint() {
+            if (!dom.dropHint) return;
+            clearTimeout(dropHintTimer);
+            dom.dropHint.classList.remove("fade-out");
+            dropHintTimer = window.setTimeout(() => {
+                dom.dropHint.classList.add("fade-out");
+            }, 3000);
         }
 
         function syncMobileDockOffset(shouldResize = true) {
