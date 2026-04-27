@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>画大饼生存战</title>
+    <title>画大饼生存战 · 手机版</title>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/matter-js/0.19.0/matter.min.js"></script>
     <style>
         :root {
@@ -17,6 +17,13 @@
             --danger: #e5484d;
             --success: #1f9d55;
             --shadow: 0 18px 48px rgba(15, 23, 42, 0.14);
+            --safe-top: env(safe-area-inset-top, 0px);
+            --safe-right: env(safe-area-inset-right, 0px);
+            --safe-bottom: env(safe-area-inset-bottom, 0px);
+            --safe-left: env(safe-area-inset-left, 0px);
+            --app-height: 100dvh;
+            --mobile-header-offset: 150px;
+            --mobile-dock-offset: 104px;
         }
 
         * {
@@ -111,9 +118,44 @@
             color: #4c5a6b;
         }
 
+        .inline-notice {
+            min-width: 0;
+            min-height: 38px;
+            border: 1px solid #d7deea;
+            border-radius: 10px;
+            background: rgba(255, 255, 255, 0.95);
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            padding: 0 12px;
+            color: #35506f;
+        }
+
+        .inline-notice-author {
+            flex: 0 0 auto;
+            font-size: 12px;
+            font-weight: 800;
+            color: #2459ca;
+            white-space: nowrap;
+        }
+
+        .inline-notice-text {
+            min-width: 0;
+            font-size: 12px;
+            color: #4c5a6b;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+
         .player-input {
             padding: 0 12px;
             gap: 8px;
+        }
+
+        .player-input span {
+            white-space: nowrap;
+            flex-shrink: 0;
         }
 
         .player-input input {
@@ -273,6 +315,18 @@
             font-size: 15px;
         }
 
+        .column-next {
+            font-size: 12px;
+            color: #5f6f85;
+            white-space: nowrap;
+        }
+
+        .column-next strong {
+            font-size: 13px;
+            color: #111827;
+            font-weight: 800;
+        }
+
         .column-badge {
             font-size: 12px;
             padding: 4px 8px;
@@ -293,9 +347,8 @@
         }
 
         #game-canvas {
-            position: relative;
-            width: 100%;
-            height: 100%;
+            position: absolute;
+            inset: 0;
             overflow: hidden;
         }
 
@@ -558,7 +611,25 @@
             display: flex;
             align-items: center;
             justify-content: space-between;
+            gap: 12px;
             font-weight: 700;
+        }
+
+        .sheet-top-actions {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .sheet-back-btn {
+            border: 1px solid rgba(255, 255, 255, 0.26);
+            background: rgba(255, 255, 255, 0.14);
+            color: #ffffff;
+            border-radius: 10px;
+            padding: 8px 12px;
+            font: inherit;
+            font-weight: 700;
+            white-space: nowrap;
         }
 
         .sheet-grid {
@@ -703,6 +774,550 @@
             font-weight: 700;
         }
 
+        .mobile-actions {
+            display: none;
+        }
+
+        .utility-btn {
+            min-height: 42px;
+            border-radius: 12px;
+            padding: 0 14px;
+            border: 1px solid #d7deea;
+            background: rgba(255, 255, 255, 0.96);
+            color: #35506f;
+            font: inherit;
+            font-weight: 700;
+        }
+
+        body.mobile-version {
+            height: var(--app-height);
+            overflow: hidden;
+            background: linear-gradient(180deg, #f4f7fb 0%, #e8eef6 100%);
+        }
+
+        body.mobile-version .workspace {
+            min-height: var(--app-height);
+            height: var(--app-height);
+            align-items: stretch;
+            justify-content: flex-start;
+            padding: 0;
+        }
+
+        body.mobile-version .browser-shell {
+            width: 100%;
+            min-height: var(--app-height);
+            height: var(--app-height);
+            border-radius: 0;
+            border: 0;
+            box-shadow: none;
+            grid-template-rows: auto 1fr;
+        }
+
+        body.mobile-version .browser-top {
+            padding: calc(6px + var(--safe-top)) calc(10px + var(--safe-right)) 6px calc(10px + var(--safe-left));
+            position: sticky;
+            top: 0;
+            z-index: 18;
+            backdrop-filter: blur(16px);
+            background: rgba(244, 247, 251, 0.9);
+        }
+
+        body.mobile-version .chrome-dots {
+            display: none;
+        }
+
+        body.mobile-version .browser-bar {
+            grid-template-columns: minmax(0, 1fr);
+            gap: 0;
+            align-items: center;
+        }
+
+        body.mobile-version .inline-notice {
+            min-height: 34px;
+            border-radius: 9px;
+            padding: 0 10px;
+        }
+
+        body.mobile-version .inline-notice-author {
+            font-size: 11px;
+        }
+
+        body.mobile-version .inline-notice-text {
+            font-size: 11px;
+        }
+
+        body.mobile-version .mobile-actions {
+            display: grid;
+            grid-template-columns: repeat(4, minmax(0, 1fr));
+            gap: 6px;
+            margin-top: 6px;
+        }
+
+        body.mobile-version .utility-btn {
+            min-height: 34px;
+            padding: 0 8px;
+            border-radius: 10px;
+            font-size: 13px;
+        }
+
+        body.mobile-version .shell-content {
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+            height: 100%;
+            min-height: 0;
+            padding: 10px calc(12px + var(--safe-right)) calc(var(--mobile-dock-offset) + var(--safe-bottom)) calc(12px + var(--safe-left));
+            overflow-x: hidden;
+            overflow-y: hidden;
+        }
+
+        body.mobile-version .sidebar,
+        body.mobile-version .inspector {
+            position: fixed;
+            left: calc(10px + var(--safe-left));
+            right: calc(10px + var(--safe-right));
+            bottom: calc(var(--mobile-dock-offset) - 12px + var(--safe-bottom));
+            z-index: 24;
+            display: block;
+            order: 3;
+            padding: 16px 14px;
+            background: rgba(255, 255, 255, 0.98);
+            border: 1px solid var(--soft-line);
+            overflow: auto;
+            max-height: min(68vh, 640px);
+            box-shadow: 0 18px 40px rgba(15, 23, 42, 0.18);
+            transform: translateY(calc(100% + 24px));
+            opacity: 0;
+            pointer-events: none;
+            transition: transform 0.24s ease, opacity 0.24s ease;
+        }
+
+        body.mobile-version .main-stage {
+            order: 1;
+            padding: 0;
+            min-height: 0;
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+        }
+
+        body.mobile-version .toolbar {
+            flex-direction: column;
+            align-items: stretch;
+            gap: 6px;
+            margin-bottom: 6px;
+        }
+
+        body.mobile-version .toolbar-left h1 {
+            font-size: 18px;
+            margin-bottom: 0;
+            line-height: 1.05;
+        }
+
+        body.mobile-version .toolbar-left p {
+            display: none;
+        }
+
+        body.mobile-version .toolbar-right {
+            grid-template-columns: repeat(3, minmax(0, 1fr));
+            gap: 6px;
+            position: relative;
+            top: 0;
+            z-index: 14;
+            padding: 6px;
+            border-radius: 14px;
+            background: rgba(246, 249, 253, 0.92);
+            border: 1px solid rgba(214, 223, 237, 0.95);
+            box-shadow: 0 10px 24px rgba(15, 23, 42, 0.06);
+            backdrop-filter: blur(14px);
+        }
+
+        body.mobile-version .metric-card {
+            min-height: 58px;
+            padding: 6px 8px;
+            border-radius: 12px;
+            box-shadow: none;
+            display: flex;
+            flex-direction: column;
+            justify-content: flex-start;
+            align-items: flex-start;
+        }
+
+        body.mobile-version .metric-label {
+            font-size: 10px;
+            margin-bottom: 4px;
+            letter-spacing: 0.02em;
+            text-transform: none;
+        }
+
+        body.mobile-version .metric-value {
+            font-size: 16px;
+            width: 100%;
+            margin-bottom: 4px;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+
+        body.mobile-version #status-text {
+            min-height: 18px;
+            font-size: 13px;
+            line-height: 1.1;
+            display: block;
+        }
+
+        body.mobile-version .metric-sub {
+            font-size: 10px;
+            line-height: 1.15;
+            width: 100%;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+
+        body.mobile-version .board-row {
+            display: block;
+            flex: 1;
+            min-height: 0;
+            height: 100%;
+        }
+
+        body.mobile-version .jira-column {
+            width: 100%;
+            border-radius: 16px;
+            height: 100%;
+            min-height: 0;
+            display: flex;
+            flex-direction: column;
+            contain: layout paint;
+            box-shadow: none;
+        }
+
+        body.mobile-version .column-header {
+            display: grid;
+            grid-template-columns: auto 1fr auto;
+            align-items: center;
+            gap: 8px;
+        }
+
+        body.mobile-version .column-next {
+            min-width: 0;
+            text-align: center;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+
+        body.mobile-version #game-shell {
+            flex: 1;
+            min-height: 0;
+            height: auto;
+            touch-action: none;
+            border-radius: 0 0 16px 16px;
+            overflow: hidden;
+            box-shadow: none;
+            contain: layout paint size;
+            transform: translateZ(0);
+            backface-visibility: hidden;
+        }
+
+        body.mobile-version .drop-hint {
+            top: 14px;
+            left: 14px;
+            right: 14px;
+            transform: none;
+            width: auto;
+            padding: 0;
+            gap: 0;
+            justify-content: flex-end;
+        }
+
+        body.mobile-version .drop-pill {
+            min-height: 42px;
+            padding: 9px 12px;
+            font-size: 12px;
+            border-radius: 14px;
+            background: rgba(255, 255, 255, 0.96);
+            box-shadow: 0 10px 24px rgba(15, 23, 42, 0.12);
+        }
+
+        body.mobile-version .interference-panel {
+            height: 0;
+            min-height: 0;
+            margin: 0;
+            padding: 0;
+            border: 0;
+            background: transparent;
+            overflow: visible;
+        }
+
+        body.mobile-version .interference-panel > .panel-title,
+        body.mobile-version .interference-panel > .stat-card:not(.mobile-skill-dock) {
+            display: none;
+        }
+
+        body.mobile-version .mobile-skill-dock {
+            position: fixed;
+            left: calc(12px + var(--safe-left));
+            right: calc(12px + var(--safe-right));
+            bottom: calc(8px + var(--safe-bottom));
+            z-index: 25;
+            margin: 0;
+            padding: 6px 7px 7px;
+            border-radius: 14px;
+            border: 1px solid rgba(216, 228, 251, 0.96);
+            background: rgba(255, 255, 255, 0.98);
+            box-shadow: 0 -2px 0 rgba(255, 255, 255, 0.8), 0 10px 22px rgba(15, 23, 42, 0.12);
+            backdrop-filter: blur(16px);
+        }
+
+        body.mobile-version .mobile-skill-dock strong {
+            display: block;
+            margin-bottom: 3px;
+            font-size: 11px;
+            line-height: 1.1;
+            color: #35506f;
+        }
+
+        body.mobile-version .mobile-skill-dock .skill-grid {
+            grid-template-columns: repeat(2, minmax(0, 1fr));
+            gap: 6px;
+        }
+
+        body.mobile-version .mobile-skill-dock .skill-btn {
+            min-height: 34px;
+            padding: 0 8px;
+            border-radius: 11px;
+            text-align: center;
+            font-size: 13px;
+        }
+
+        body.mobile-version .mobile-skill-dock .skill-meta {
+            margin-top: 2px;
+            line-height: 1.15;
+            font-size: 9px;
+            color: #6a7890;
+            display: -webkit-box;
+            -webkit-box-orient: vertical;
+            -webkit-line-clamp: 1;
+            overflow: hidden;
+        }
+
+        body.mobile-version .inspector {
+            order: 2;
+        }
+
+        body.mobile-version .sidebar-title {
+            margin-bottom: 10px;
+        }
+
+        body.mobile-version .side-card,
+        body.mobile-version .stat-card,
+        body.mobile-version .sidebar .nav-item,
+        body.mobile-version .inspector,
+        body.mobile-version .sidebar {
+            border-radius: 16px;
+        }
+
+        body.mobile-version .side-card,
+        body.mobile-version .sidebar,
+        body.mobile-version .inspector {
+            background: var(--panel);
+            border: 1px solid var(--soft-line);
+            padding: 14px;
+        }
+
+        body.mobile-version .sidebar {
+            order: 4;
+        }
+
+        body.mobile-version .sidebar.open,
+        body.mobile-version .inspector.open {
+            transform: translateY(0);
+            opacity: 1;
+            pointer-events: auto;
+        }
+
+        .mobile-drawer-head {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 10px;
+            margin-bottom: 12px;
+        }
+
+        .mobile-drawer-title {
+            font-size: 16px;
+            font-weight: 800;
+            color: #24364e;
+        }
+
+        .drawer-close-btn {
+            min-width: 40px;
+            height: 40px;
+            border-radius: 12px;
+            border: 1px solid #d7deea;
+            background: #f8fbff;
+            color: #35506f;
+            font: inherit;
+            font-weight: 800;
+        }
+
+        #mobile-drawer-mask {
+            position: fixed;
+            inset: 0;
+            z-index: 23;
+            background: rgba(15, 23, 42, 0.28);
+            opacity: 0;
+            pointer-events: none;
+            transition: opacity 0.24s ease;
+        }
+
+        #mobile-drawer-mask.visible {
+            opacity: 1;
+            pointer-events: auto;
+        }
+
+        body.mobile-version .sidebar .nav-item {
+            padding: 9px 10px;
+            margin-bottom: 6px;
+        }
+
+        body.mobile-version #notifications {
+            display: none;
+        }
+
+        body.mobile-version #panic-overlay {
+            padding: calc(10px + var(--safe-top)) calc(10px + var(--safe-right)) calc(10px + var(--safe-bottom)) calc(10px + var(--safe-left));
+        }
+
+        body.mobile-version .spreadsheet {
+            width: 100%;
+            height: min(92vh, 860px);
+            border-radius: 12px;
+        }
+
+        body.mobile-version .sheet-top {
+            padding: 0 12px;
+            font-size: 12px;
+        }
+
+        body.mobile-version .sheet-back-btn {
+            padding: 7px 10px;
+            border-radius: 9px;
+            font-size: 12px;
+        }
+
+        body.mobile-version .sheet-caption {
+            padding: 0 16px;
+            text-align: center;
+        }
+
+        body.mobile-version .pip-modal {
+            width: min(94vw, 520px);
+            border-radius: 18px;
+        }
+
+        @media (max-width: 420px) {
+            body.mobile-version .browser-bar {
+                grid-template-columns: minmax(0, 1fr);
+            }
+
+            body.mobile-version .inline-notice {
+                min-width: 0;
+            }
+
+            body.mobile-version .toolbar {
+                gap: 6px;
+                margin-bottom: 6px;
+            }
+
+            body.mobile-version .toolbar-left h1 {
+                font-size: 16px;
+            }
+
+            body.mobile-version .toolbar-right {
+                grid-template-columns: repeat(3, minmax(0, 1fr));
+                gap: 6px;
+                padding: 6px;
+                border-radius: 14px;
+            }
+
+            body.mobile-version .metric-card {
+                min-height: 58px;
+                padding: 6px 8px;
+                border-radius: 12px;
+            }
+
+            body.mobile-version .metric-label,
+            body.mobile-version .metric-sub {
+                font-size: 10px;
+                line-height: 1.2;
+            }
+
+            body.mobile-version .metric-value {
+                font-size: 15px;
+            }
+
+            body.mobile-version #status-text {
+                min-height: 20px;
+                font-size: 13px;
+                line-height: 1.1;
+            }
+
+            body.mobile-version .drop-hint {
+                top: 10px;
+                left: 10px;
+                right: 10px;
+                gap: 0;
+                flex-direction: row;
+                align-items: center;
+                justify-content: flex-end;
+            }
+
+            body.mobile-version .drop-pill {
+                min-height: 34px;
+                padding: 7px 10px;
+                font-size: 11px;
+                border-radius: 12px;
+            }
+
+            body.mobile-version .drop-pill:last-child {
+                flex: 0 0 auto;
+                white-space: nowrap;
+            }
+
+            body.mobile-version .mobile-skill-dock .skill-grid {
+                grid-template-columns: repeat(2, minmax(0, 1fr));
+                gap: 6px;
+            }
+
+            body.mobile-version .mobile-skill-dock {
+                padding: 6px 6px 7px;
+            }
+
+            body.mobile-version .mobile-skill-dock strong {
+                font-size: 10px;
+            }
+
+            body.mobile-version .mobile-skill-dock .skill-meta {
+                font-size: 9px;
+            }
+
+            body.mobile-version #game-shell {
+                flex: 1;
+                min-height: 0;
+                height: auto;
+            }
+        }
+
+        @media (orientation: landscape) and (max-width: 960px) {
+            body.mobile-version #game-shell {
+                flex: 1;
+                min-height: 0;
+                height: auto;
+            }
+        }
+
         @media (max-width: 1180px) {
             .shell-content {
                 grid-template-columns: 220px 1fr;
@@ -732,7 +1347,7 @@
         }
     </style>
 </head>
-<body>
+<body class="mobile-version">
     <div class="workspace">
         <div class="browser-shell" id="browser-shell">
             <div class="browser-top">
@@ -740,17 +1355,26 @@
                     <span></span><span></span><span></span>
                 </div>
                 <div class="browser-bar">
-                    <div class="address-bar">https://workhub.local/boards/prd-survivor/sprint_2026_q2</div>
-                    <div class="browser-pill">协作同步：正常</div>
-                    <label class="player-input">
-                        <span>负责人</span>
-                        <input id="player-name" type="text" maxlength="16" value="产品经理">
-                    </label>
+                    <div class="inline-notice" id="inline-notice">
+                        <span class="inline-notice-author" id="inline-notice-author">@工作台</span>
+                        <span class="inline-notice-text" id="inline-notice-text">待办已同步，开始撰写新一轮需求愿景。</span>
+                    </div>
+                    <input id="player-name" type="hidden" value="产品经理">
+                </div>
+                <div class="mobile-actions">
+                    <button class="utility-btn" id="mobile-panic-button" type="button">财务</button>
+                    <button class="utility-btn" id="mobile-restart-button" type="button">重画</button>
+                    <button class="utility-btn" id="mobile-info-button" type="button">说明</button>
+                    <button class="utility-btn" id="mobile-path-button" type="button">路径</button>
                 </div>
             </div>
 
             <div class="shell-content">
                 <aside class="sidebar">
+                    <div class="mobile-drawer-head">
+                        <div class="mobile-drawer-title">玩法说明</div>
+                        <button class="drawer-close-btn" id="close-info-drawer" type="button">关闭</button>
+                    </div>
                     <div class="sidebar-title">项目目录</div>
                     <div class="nav-item">冲刺_2026_第2季度 <span>12</span></div>
                     <div class="nav-item active">待办池 <span>∞</span></div>
@@ -761,38 +1385,43 @@
 
                     <div class="side-card">
                         <div class="panel-title">提示</div>
-                        <p class="panel-copy">移动鼠标选择投放位置，点击投放关键词球。连续合成会提高老板好感度，但开发和设计随时会让局面失控。</p>
-                        <p class="panel-copy" style="margin-top: 8px;">当你合成出 L6「全链路打通」及以上等级时，可以主动撞碎老板球，并把大愿景拆成可排期的小活。</p>
+                        <p class="panel-copy">手指在棋盘上滑动可调整投放位置，轻点即可落球。连续合成会提高老板好感度，但开发和设计随时会让局面失控。</p>
+                        <p class="panel-copy" style="margin-top: 8px;">合成出 L6「全链路打通」及以上等级后，可以主动撞碎老板球，把大愿景拆成可排期的小活。</p>
                     </div>
 
                     <div class="side-card">
-                        <div class="panel-title">快捷键</div>
-                        <p class="panel-copy"><span class="hotkey">Esc</span> 或 <span class="hotkey">Space</span> 启动老板键</p>
-                        <p class="panel-copy"><span class="hotkey">R</span> 在绩效面板出现后快速重开</p>
+                        <div class="panel-title">触控操作</div>
+                        <p class="panel-copy">点击顶部“财务模式”可快速切换伪装界面。</p>
+                        <p class="panel-copy"><span class="hotkey">轻点</span> 投放需求球，<span class="hotkey">长看</span> 通知卡可暂停消失。</p>
+                    </div>
+                    <div class="side-card">
+                        <div class="panel-title">干扰机制</div>
+                        <p class="panel-copy">老板球有 3 点耐心值，L3-L4 磨掉 1 点，L5 磨掉 2 点，L6 及以上可直接拆解。</p>
+                        <p class="panel-copy" style="margin-top: 8px;">堆积超过 60% 会暂停老板球投放；5 秒 3 连消会随机清掉一个老板球。</p>
                     </div>
                 </aside>
 
                 <main class="main-stage">
                     <div class="toolbar">
                         <div class="toolbar-left">
-                            <h1>画大饼生存战</h1>
+                    <h1>PM画大饼生存战</h1>
                             <p>待办列伪装成办公看板，目标是在逻辑崩溃前合成出“改变世界的 PPT”。</p>
                         </div>
                         <div class="toolbar-right">
                             <div class="metric-card">
-                                <div class="metric-label">产能值</div>
+                                <div class="metric-label">产能</div>
                                 <div class="metric-value" id="score">0</div>
-                                <p class="metric-sub">已完成故事点</p>
+                                <p class="metric-sub">故事点</p>
                             </div>
                             <div class="metric-card">
                                 <div class="metric-label">连击</div>
                                 <div class="metric-value" id="combo">0</div>
-                                <p class="metric-sub">老板对你的好感度连击</p>
+                                <p class="metric-sub">甲方的好感连击</p>
                             </div>
                             <div class="metric-card">
                                 <div class="metric-label">状态</div>
-                                <div class="metric-value" id="status-text">稳态推进</div>
-                                <p class="metric-sub" id="chaos-timer">下次老板拍脑袋: 45s</p>
+                                <div class="metric-value" id="status-text">稳态</div>
+                                <p class="metric-sub" id="chaos-timer">老板的拍脑袋 45s</p>
                             </div>
                         </div>
                     </div>
@@ -801,14 +1430,14 @@
                         <section class="jira-column">
                             <div class="column-header">
                                 <strong>待办</strong>
+                                <span class="column-next">下一个：<strong id="next-label">修复Bug</strong></span>
                                 <span class="column-badge">干系人混乱现场</span>
                             </div>
                             <div id="game-shell">
                                 <div class="warning-label">逻辑红线</div>
                                 <div class="warning-line"></div>
                                 <div class="drop-hint">
-                                    <div class="drop-pill">下一个：<strong id="next-label">修复Bug</strong></div>
-                                    <div class="drop-pill">点击下达“产品指令”</div>
+                                    <div class="drop-pill">轻点投放</div>
                                 </div>
                                 <div id="game-canvas"></div>
                             </div>
@@ -816,16 +1445,16 @@
 
                         <section class="side-card interference-panel" style="flex:1; min-width: 0; margin-bottom: 0;">
                             <div class="panel-title">干扰机制</div>
-                            <div class="stat-card">
-                                <strong style="display:block; margin-bottom: 8px;">向上管理技能</strong>
+                            <div class="stat-card mobile-skill-dock">
+                                <strong style="display:block; margin-bottom: 5px;">向上管理技能</strong>
                                 <div class="skill-grid">
                                     <div>
                                         <button class="btn skill-btn" id="postpone-skill-button" type="button">战略暂缓</button>
-                                        <p class="skill-meta" id="postpone-skill-meta">点击场上的老板球，将其排到下季度。</p>
+                                        <p class="skill-meta" id="postpone-skill-meta">点老板球，延后 30 秒。</p>
                                     </div>
                                     <div>
                                         <button class="btn skill-btn" id="canary-skill-button" type="button">灰度发布</button>
-                                        <p class="skill-meta" id="canary-skill-meta">激活后，接下来 3 个投放球会直接穿过堆积区落到底部。</p>
+                                        <p class="skill-meta" id="canary-skill-meta">激活后可穿透投放 3 次。</p>
                                     </div>
                                 </div>
                             </div>
@@ -850,6 +1479,10 @@
                 </main>
 
                 <aside class="inspector">
+                    <div class="mobile-drawer-head">
+                        <div class="mobile-drawer-title">进化与简报</div>
+                        <button class="drawer-close-btn" id="close-path-drawer" type="button">关闭</button>
+                    </div>
                     <div class="sidebar-title">进化路径</div>
                     <div id="sequence-list"></div>
                     <div class="side-card">
@@ -865,13 +1498,17 @@
         </div>
     </div>
 
+    <div id="mobile-drawer-mask" aria-hidden="true"></div>
     <div id="notifications"></div>
 
     <div id="panic-overlay" aria-hidden="true">
         <div class="spreadsheet">
             <div class="sheet-top">
                 <span>FY26_Budget_Forecast_v12.xlsx</span>
-                <span>已自动保存</span>
+                <div class="sheet-top-actions">
+                    <span>已自动保存</span>
+                    <button class="sheet-back-btn" id="panic-back-button" type="button">返回工作台</button>
+                </div>
             </div>
             <div class="sheet-grid" id="sheet-grid"></div>
         </div>
@@ -941,6 +1578,12 @@
         const CRISIS_STACK_RATIO = 0.6;
         const BOSS_SPAWN_GRACE_MS = 1200;
         const BOSS_HIT_COOLDOWN_MS = 700;
+        const MIN_BOARD_WIDTH = 300;
+        const MIN_BOARD_HEIGHT = 360;
+        const MOBILE_BALL_SCALE = 1.12;
+        const MOBILE_BOSS_RADIUS = 60;
+        const DESIGNER_TOTAL_TICKS = 16;
+        const DESIGNER_TOTAL_GROWTH = 1.1;
         const COLLISION_CATEGORIES = {
             WALL: 0x0001,
             KEYWORD: 0x0002,
@@ -960,11 +1603,15 @@
 
         const dom = {
             shell: document.getElementById("browser-shell"),
+            browserTop: document.querySelector(".browser-top"),
             gameShell: document.getElementById("game-shell"),
             gameCanvas: document.getElementById("game-canvas"),
             notifications: document.getElementById("notifications"),
             warningLine: document.querySelector(".warning-line"),
             warningLabel: document.querySelector(".warning-label"),
+            inlineNotice: document.getElementById("inline-notice"),
+            inlineNoticeAuthor: document.getElementById("inline-notice-author"),
+            inlineNoticeText: document.getElementById("inline-notice-text"),
             score: document.getElementById("score"),
             combo: document.getElementById("combo"),
             nextLabel: document.getElementById("next-label"),
@@ -983,10 +1630,21 @@
             dismissReport: document.getElementById("dismiss-report"),
             sequenceList: document.getElementById("sequence-list"),
             sheetGrid: document.getElementById("sheet-grid"),
+            panicBackButton: document.getElementById("panic-back-button"),
             postponeSkillButton: document.getElementById("postpone-skill-button"),
             postponeSkillMeta: document.getElementById("postpone-skill-meta"),
             canarySkillButton: document.getElementById("canary-skill-button"),
-            canarySkillMeta: document.getElementById("canary-skill-meta")
+            canarySkillMeta: document.getElementById("canary-skill-meta"),
+            mobilePanicButton: document.getElementById("mobile-panic-button"),
+            mobileRestartButton: document.getElementById("mobile-restart-button"),
+            mobileInfoButton: document.getElementById("mobile-info-button"),
+            mobilePathButton: document.getElementById("mobile-path-button"),
+            infoDrawer: document.querySelector(".sidebar"),
+            pathDrawer: document.querySelector(".inspector"),
+            closeInfoDrawer: document.getElementById("close-info-drawer"),
+            closePathDrawer: document.getElementById("close-path-drawer"),
+            mobileDrawerMask: document.getElementById("mobile-drawer-mask"),
+            mobileSkillDock: document.querySelector(".mobile-skill-dock")
         };
 
         let boardWidth = BOARD_WIDTH;
@@ -1003,6 +1661,13 @@
         let audioContext = null;
         let render;
         let walls;
+        let layoutRefreshFrame = 0;
+        let mobileHeaderOffset = 150;
+        let mobileDockOffset = 104;
+        let lastSkillUiSignature = "";
+        let lastHudScore = null;
+        let lastHudCombo = null;
+        let lastChaosText = "";
 
         const game = {
             score: 0,
@@ -1026,6 +1691,9 @@
 
         buildSequenceList();
         buildSpreadsheet();
+        syncAppHeight();
+        syncMobileHeaderOffset();
+        syncMobileDockOffset(false);
         syncBoardMetrics();
 
         const engine = Engine.create();
@@ -1054,11 +1722,19 @@
         Events.on(engine, "collisionStart", handleCollisionStart);
         Events.on(engine, "beforeUpdate", updateTransientBodies);
 
-        dom.gameShell.addEventListener("mousemove", onPointerMove);
-        dom.gameShell.addEventListener("mousedown", handleBoardPointerDown);
+        dom.gameShell.addEventListener("pointermove", onPointerMove, { passive: false });
+        dom.gameShell.addEventListener("pointerdown", handleBoardPointerDown, { passive: false });
         dom.restartButton.addEventListener("click", restartGame);
         dom.dismissReport.addEventListener("click", dismissGameOver);
         dom.canarySkillButton.addEventListener("click", activateCanaryRelease);
+        dom.mobilePanicButton.addEventListener("click", () => togglePanic());
+        dom.panicBackButton.addEventListener("click", () => togglePanic(false));
+        dom.mobileRestartButton.addEventListener("click", restartGame);
+        dom.mobileInfoButton.addEventListener("click", () => openMobileDrawer("info"));
+        dom.mobilePathButton.addEventListener("click", () => openMobileDrawer("path"));
+        dom.closeInfoDrawer.addEventListener("click", closeMobileDrawers);
+        dom.closePathDrawer.addEventListener("click", closeMobileDrawers);
+        dom.mobileDrawerMask.addEventListener("click", closeMobileDrawers);
         dom.postponeSkillButton.addEventListener("click", () => {
             if (Date.now() < game.postponeCooldownUntil) {
                 notify("项目办", `战略暂缓冷却中，还需 ${Math.ceil((game.postponeCooldownUntil - Date.now()) / 1000)} 秒。`, "warn");
@@ -1069,14 +1745,26 @@
 
         window.addEventListener("load", () => {
             requestAnimationFrame(() => {
-                resizeBoard();
-                setTimeout(resizeBoard, 80);
-                setTimeout(resizeBoard, 220);
+                scheduleLayoutRefresh();
+                setTimeout(scheduleLayoutRefresh, 80);
+                setTimeout(scheduleLayoutRefresh, 220);
             });
         });
         window.addEventListener("resize", () => {
-            requestAnimationFrame(resizeBoard);
+            scheduleLayoutRefresh();
         });
+        if (window.ResizeObserver && dom.browserTop) {
+            const mobileHeaderObserver = new ResizeObserver(() => {
+                scheduleLayoutRefresh();
+            });
+            mobileHeaderObserver.observe(dom.browserTop);
+        }
+        if (window.ResizeObserver && dom.mobileSkillDock) {
+            const mobileDockObserver = new ResizeObserver(() => {
+                scheduleLayoutRefresh();
+            });
+            mobileDockObserver.observe(dom.mobileSkillDock);
+        }
 
         document.addEventListener("keydown", (event) => {
             if (event.code === "Space" || event.code === "Escape") {
@@ -1114,9 +1802,18 @@
             ];
         }
 
+        function getScaledBuzzwordRadius(level) {
+            return Math.round(BUZZWORDS[level].radius * MOBILE_BALL_SCALE);
+        }
+
+        function getDropClampPadding(level = game.nextLevel) {
+            return Math.max(32, getScaledBuzzwordRadius(level) + 6);
+        }
+
         function createKeywordBody(x, y, level) {
             const config = BUZZWORDS[level];
-            const body = Bodies.circle(x, y, config.radius, {
+            const scaledRadius = getScaledBuzzwordRadius(level);
+            const body = Bodies.circle(x, y, scaledRadius, {
                 label: "buzzword",
                 restitution: 0.06,
                 friction: 0.72,
@@ -1136,7 +1833,7 @@
 
             body.level = level;
             body.displayLabel = config.label;
-            body.radius = config.radius;
+            body.radius = scaledRadius;
             body.isMergingLocked = false;
             body.designerScaleTicks = 0;
             body.isCanary = false;
@@ -1145,7 +1842,8 @@
 
         function createBossBall(x) {
             const label = BOSS_VISIONS[Math.floor(Math.random() * BOSS_VISIONS.length)];
-            const body = Bodies.circle(x, 42, 52, {
+            const baseRadius = MOBILE_BOSS_RADIUS;
+            const body = Bodies.circle(x, 42, baseRadius, {
                 label: "bossVision",
                 restitution: 0.02,
                 friction: 0.92,
@@ -1163,7 +1861,7 @@
             });
 
             body.displayLabel = label;
-            body.radius = 52;
+            body.radius = baseRadius;
             body.patience = BOSS_PATIENCE;
             body.maxPatience = BOSS_PATIENCE;
             body.isPostponed = false;
@@ -1218,16 +1916,20 @@
         }
 
         function onPointerMove(event) {
+            if (event.cancelable) event.preventDefault();
             const rect = dom.gameShell.getBoundingClientRect();
-            mouseX = clamp(event.clientX - rect.left, 28, boardWidth - 28);
+            const padding = getDropClampPadding();
+            mouseX = clamp(event.clientX - rect.left, padding, boardWidth - padding);
         }
 
         function handleBoardPointerDown(event) {
-            if (event.button !== 0) return;
+            if (event.button !== 0 && event.pointerType !== "touch") return;
+            if (event.cancelable) event.preventDefault();
 
             const rect = dom.gameShell.getBoundingClientRect();
+            const padding = getDropClampPadding();
             const point = {
-                x: clamp(event.clientX - rect.left, 28, boardWidth - 28),
+                x: clamp(event.clientX - rect.left, padding, boardWidth - padding),
                 y: event.clientY - rect.top
             };
 
@@ -1509,7 +2211,8 @@
             if (game.bossSpawnPaused) return;
 
             bossCountdownStartedAt = Date.now();
-            const x = 72 + Math.random() * (boardWidth - 144);
+            const xPadding = MOBILE_BOSS_RADIUS + 12;
+            const x = xPadding + Math.random() * Math.max(1, boardWidth - xPadding * 2);
             const bossBall = createBossBall(x);
             World.add(engine.world, bossBall);
 
@@ -1533,8 +2236,8 @@
 
             const target = candidates[Math.floor(Math.random() * candidates.length)];
             let ticks = 0;
-            const totalTicks = 20;
-            const scalePerTick = Math.pow(Math.pow(1.05, 5), 1 / totalTicks);
+            const totalTicks = DESIGNER_TOTAL_TICKS;
+            const scalePerTick = Math.pow(DESIGNER_TOTAL_GROWTH, 1 / totalTicks);
 
             const growthTimer = setInterval(() => {
                 if (game.gameOver || !Composite.get(engine.world, target.id, "body")) {
@@ -1645,37 +2348,71 @@
             if (game.gameOver || game.panicMode) return;
 
             const config = BUZZWORDS[game.nextLevel];
+            const scaledRadius = getScaledBuzzwordRadius(game.nextLevel);
+            const pulse = (Math.sin(Date.now() * 0.008) + 1) / 2;
+            const guideRadius = scaledRadius + 10 + pulse * 8;
             ctx.save();
             ctx.beginPath();
-            ctx.setLineDash([4, 6]);
-            ctx.moveTo(mouseX, 20);
-            ctx.lineTo(mouseX, dropY - config.radius - 8);
-            ctx.strokeStyle = "rgba(37, 99, 235, 0.35)";
-            ctx.lineWidth = 2;
+            ctx.setLineDash([8, 8]);
+            ctx.moveTo(mouseX, 18);
+            ctx.lineTo(mouseX, dropY - guideRadius - 10);
+            ctx.strokeStyle = "rgba(37, 99, 235, 0.5)";
+            ctx.lineWidth = 3;
             ctx.stroke();
             ctx.setLineDash([]);
 
-            ctx.globalAlpha = 0.32;
             ctx.beginPath();
-            ctx.arc(mouseX, dropY, config.radius, 0, Math.PI * 2);
+            ctx.arc(mouseX, dropY, guideRadius, 0, Math.PI * 2);
+            ctx.fillStyle = "rgba(37, 99, 235, 0.08)";
+            ctx.fill();
+
+            ctx.beginPath();
+            ctx.arc(mouseX, dropY, scaledRadius, 0, Math.PI * 2);
+            ctx.globalAlpha = 0.42;
             ctx.fillStyle = config.color;
             ctx.fill();
-            ctx.strokeStyle = "rgba(37, 99, 235, 0.4)";
+            ctx.globalAlpha = 1;
+            ctx.strokeStyle = "rgba(37, 99, 235, 0.75)";
+            ctx.lineWidth = 3;
+            ctx.stroke();
+
+            ctx.beginPath();
+            ctx.arc(mouseX, dropY, Math.max(10, scaledRadius * 0.34), 0, Math.PI * 2);
+            ctx.fillStyle = "rgba(255, 255, 255, 0.88)";
+            ctx.fill();
+            ctx.strokeStyle = "rgba(37, 99, 235, 0.55)";
             ctx.lineWidth = 2;
             ctx.stroke();
+
+            ctx.fillStyle = "#1d4ed8";
+            ctx.font = '700 12px system-ui, "Microsoft YaHei", sans-serif';
+            ctx.fillText("痛点", mouseX, dropY);
             ctx.restore();
         }
 
         function wrapText(ctx, text, maxWidth, lineHeight) {
-            const chars = text.split("");
+            const tokens = text.match(/[A-Za-z0-9]+|[\u4e00-\u9fff]|./g) || [];
             const lines = [];
             let current = "";
 
-            chars.forEach((char) => {
-                const test = current + char;
+            tokens.forEach((token) => {
+                const test = current + token;
                 if (ctx.measureText(test).width > maxWidth && current) {
                     lines.push(current);
-                    current = char;
+                    current = token;
+                    return;
+                }
+
+                if (ctx.measureText(token).width > maxWidth && !current) {
+                    token.split("").forEach((char) => {
+                        const charTest = current + char;
+                        if (ctx.measureText(charTest).width > maxWidth && current) {
+                            lines.push(current);
+                            current = char;
+                        } else {
+                            current = charTest;
+                        }
+                    });
                 } else {
                     current = test;
                 }
@@ -1699,9 +2436,12 @@
 
         function updateChaosTimer() {
             const bossRemaining = Math.max(0, Math.ceil((BOSS_INTERVAL_MS - (Date.now() - bossCountdownStartedAt)) / 1000));
-            dom.chaosTimer.textContent = game.bossSpawnPaused
-                ? "线上故障处理中：老板暂缓插队"
-                : `下次老板拍脑袋: ${bossRemaining}s`;
+            const nextChaosText = game.bossSpawnPaused
+                ? "老板的拍脑袋暂停"
+                : `老板的拍脑袋 ${bossRemaining}s`;
+            if (nextChaosText === lastChaosText) return;
+            dom.chaosTimer.textContent = nextChaosText;
+            lastChaosText = nextChaosText;
         }
 
         function checkOverflowState() {
@@ -1794,11 +2534,14 @@
 
         function syncBoardMetrics() {
             const rect = dom.gameShell.getBoundingClientRect();
-            boardWidth = Math.max(440, Math.round(rect.width || BOARD_WIDTH));
-            boardHeight = Math.max(420, Math.round(rect.height || DEFAULT_BOARD_HEIGHT));
+            boardWidth = Math.max(MIN_BOARD_WIDTH, Math.round(rect.width || BOARD_WIDTH));
+            boardHeight = Math.max(MIN_BOARD_HEIGHT, Math.round(rect.height || DEFAULT_BOARD_HEIGHT));
             warningLineY = Math.round(boardHeight * 0.191);
             dropY = Math.max(72, Math.round(boardHeight * 0.113));
 
+            // Lock the board to the measured viewport slice so surrounding UI changes
+            // do not nudge the playable area while physics is running.
+            dom.gameShell.style.height = boardHeight + "px";
             dom.gameCanvas.style.width = boardWidth + "px";
             dom.gameCanvas.style.height = boardHeight + "px";
             if (render && render.canvas) {
@@ -1807,7 +2550,44 @@
             }
             dom.warningLine.style.top = warningLineY + "px";
             dom.warningLabel.style.top = warningLineY - 20 + "px";
-            mouseX = clamp(mouseX, 28, boardWidth - 28);
+            const padding = getDropClampPadding();
+            mouseX = clamp(mouseX, padding, boardWidth - padding);
+        }
+
+        function syncMobileDockOffset(shouldResize = true) {
+            if (!document.body.classList.contains("mobile-version") || !dom.mobileSkillDock) return;
+            const nextOffset = Math.max(72, Math.ceil(dom.mobileSkillDock.getBoundingClientRect().height) + 12);
+            if (nextOffset === mobileDockOffset) return;
+            mobileDockOffset = nextOffset;
+            document.documentElement.style.setProperty("--mobile-dock-offset", `${mobileDockOffset}px`);
+            if (shouldResize) {
+                scheduleLayoutRefresh();
+            }
+        }
+
+        function syncAppHeight() {
+            if (!document.body.classList.contains("mobile-version")) return;
+            const nextHeight = Math.max(1, window.innerHeight || document.documentElement.clientHeight || 0);
+            document.documentElement.style.setProperty("--app-height", `${nextHeight}px`);
+        }
+
+        function syncMobileHeaderOffset() {
+            if (!document.body.classList.contains("mobile-version") || !dom.browserTop) return;
+            const nextOffset = Math.max(120, Math.ceil(dom.browserTop.getBoundingClientRect().height));
+            if (nextOffset === mobileHeaderOffset) return;
+            mobileHeaderOffset = nextOffset;
+            document.documentElement.style.setProperty("--mobile-header-offset", `${mobileHeaderOffset}px`);
+        }
+
+        function scheduleLayoutRefresh() {
+            if (layoutRefreshFrame) return;
+            layoutRefreshFrame = requestAnimationFrame(() => {
+                layoutRefreshFrame = 0;
+                syncAppHeight();
+                syncMobileHeaderOffset();
+                syncMobileDockOffset(false);
+                resizeBoard();
+            });
         }
 
         function resizeBoard() {
@@ -1831,8 +2611,29 @@
         }
 
         function updateHud() {
-            dom.score.textContent = game.score;
-            dom.combo.textContent = game.combo;
+            if (game.score !== lastHudScore) {
+                dom.score.textContent = game.score;
+                lastHudScore = game.score;
+            }
+            if (game.combo !== lastHudCombo) {
+                dom.combo.textContent = game.combo;
+                lastHudCombo = game.combo;
+            }
+        }
+
+        function openMobileDrawer(type) {
+            const openInfo = type === "info";
+            dom.infoDrawer.classList.toggle("open", openInfo);
+            dom.pathDrawer.classList.toggle("open", !openInfo);
+            dom.mobileDrawerMask.classList.add("visible");
+            dom.mobileDrawerMask.setAttribute("aria-hidden", "false");
+        }
+
+        function closeMobileDrawers() {
+            dom.infoDrawer.classList.remove("open");
+            dom.pathDrawer.classList.remove("open");
+            dom.mobileDrawerMask.classList.remove("visible");
+            dom.mobileDrawerMask.setAttribute("aria-hidden", "true");
         }
 
         function updateTransientBodies() {
@@ -1883,23 +2684,45 @@
         function updateSkillButtons() {
             const now = Date.now();
             const postponeLeft = Math.max(0, Math.ceil((game.postponeCooldownUntil - now) / 1000));
-            dom.postponeSkillButton.disabled = postponeLeft > 0;
-            dom.postponeSkillButton.classList.toggle("active", postponeLeft === 0);
-            dom.postponeSkillMeta.textContent = postponeLeft > 0
-                ? `冷却中：${postponeLeft} 秒后可再次点击老板球。`
-                : "已就绪：直接点击场上的老板球，将其排到下季度 30 秒。";
+            const postponeDisabled = postponeLeft > 0;
+            const postponeActive = postponeLeft === 0;
+            const postponeText = postponeLeft > 0
+                ? `冷却中 ${postponeLeft}s`
+                : "就绪：点老板球延后 30 秒";
 
             const canaryLeft = Math.max(0, Math.ceil((game.canaryCooldownUntil - now) / 1000));
             const canaryActive = game.canaryCharges > 0;
-            dom.canarySkillButton.disabled = canaryLeft > 0 || canaryActive;
-            dom.canarySkillButton.classList.toggle("active", canaryActive);
+            const canaryDisabled = canaryLeft > 0 || canaryActive;
+            let canaryText = "";
             if (canaryActive) {
-                dom.canarySkillMeta.textContent = `灰度发布生效中：剩余 ${game.canaryCharges} 个穿透投放。`;
+                canaryText = `生效中：剩余 ${game.canaryCharges} 次`;
             } else if (canaryLeft > 0) {
-                dom.canarySkillMeta.textContent = `冷却中：${canaryLeft} 秒后可再次激活 3 次穿透投放。`;
+                canaryText = `冷却中 ${canaryLeft}s`;
             } else {
-                dom.canarySkillMeta.textContent = "已就绪：激活后，接下来 3 个投放球会穿过堆积区直落到底部。";
+                canaryText = "就绪：可穿透投放 3 次";
             }
+
+            const nextSignature = [
+                postponeDisabled ? 1 : 0,
+                postponeActive ? 1 : 0,
+                postponeText,
+                canaryDisabled ? 1 : 0,
+                canaryActive ? 1 : 0,
+                canaryText
+            ].join("|");
+
+            if (nextSignature === lastSkillUiSignature) {
+                return;
+            }
+
+            lastSkillUiSignature = nextSignature;
+            dom.postponeSkillButton.disabled = postponeDisabled;
+            dom.postponeSkillButton.classList.toggle("active", postponeActive);
+            dom.postponeSkillMeta.textContent = postponeText;
+            dom.canarySkillButton.disabled = canaryDisabled;
+            dom.canarySkillButton.classList.toggle("active", canaryActive);
+            dom.canarySkillMeta.textContent = canaryText;
+            syncMobileDockOffset();
         }
 
         function activateCanaryRelease() {
@@ -1990,6 +2813,13 @@
         }
 
         function notify(author, message, type) {
+            if (document.body.classList.contains("mobile-version") && dom.inlineNotice) {
+                dom.inlineNotice.dataset.type = type || "";
+                dom.inlineNoticeAuthor.textContent = `@${author}`;
+                dom.inlineNoticeText.textContent = message;
+                return;
+            }
+
             const toast = document.createElement("div");
             toast.className = `toast ${type || ""}`.trim();
             toast.innerHTML = `
@@ -2001,7 +2831,9 @@
             `;
             dom.notifications.prepend(toast);
 
-            while (dom.notifications.children.length > 5) {
+            const isMobile = document.body.classList.contains("mobile-version");
+            const maxToasts = isMobile ? 1 : 5;
+            while (dom.notifications.children.length > maxToasts) {
                 dom.notifications.removeChild(dom.notifications.lastChild);
             }
 
@@ -2010,7 +2842,9 @@
                 warn: 7600,
                 danger: 9000
             };
-            const dismissDelay = durationMap[type] || 6200;
+            const dismissDelay = isMobile
+                ? ({ success: 2600, warn: 3200, danger: 3800 }[type] || 2800)
+                : (durationMap[type] || 6200);
             let dismissTimer = null;
 
             const scheduleDismiss = () => {
