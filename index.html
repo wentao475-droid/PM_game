@@ -336,6 +336,20 @@
             font-weight: 700;
         }
 
+        .column-title {
+            font-size: 15px;
+            font-weight: 800;
+            color: #24364e;
+            white-space: nowrap;
+        }
+
+        .column-sidecopy {
+            font-size: 11px;
+            color: #75839a;
+            text-align: right;
+            white-space: nowrap;
+        }
+
         #game-shell {
             position: relative;
             width: 100%;
@@ -356,6 +370,65 @@
             display: block;
             width: 100%;
             height: 100%;
+        }
+
+        .boss-action-layer {
+            position: absolute;
+            inset: 0;
+            z-index: 16;
+            pointer-events: none;
+        }
+
+        .boss-action-button,
+        .boss-action-tip {
+            position: absolute;
+            left: 0;
+            top: 0;
+            transform: translate(-50%, -100%);
+            opacity: 0;
+            transition: opacity 0.18s ease, transform 0.18s ease;
+            will-change: transform, opacity;
+        }
+
+        .boss-action-button {
+            pointer-events: auto;
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            min-height: 34px;
+            padding: 0 12px;
+            border: 1px solid rgba(148, 163, 184, 0.42);
+            border-radius: 999px;
+            background: rgba(255, 255, 255, 0.84);
+            color: #1d4ed8;
+            font: inherit;
+            font-size: 12px;
+            font-weight: 800;
+            box-shadow: 0 10px 24px rgba(15, 23, 42, 0.12);
+            backdrop-filter: blur(10px);
+        }
+
+        .boss-action-button.visible,
+        .boss-action-tip.visible {
+            opacity: 1;
+        }
+
+        .boss-action-button.visible {
+            transform: translate(-50%, calc(-100% - 4px));
+        }
+
+        .boss-action-tip {
+            padding: 6px 10px;
+            border-radius: 999px;
+            background: rgba(15, 23, 42, 0.78);
+            color: #ffffff;
+            font-size: 12px;
+            font-weight: 700;
+            box-shadow: 0 8px 18px rgba(15, 23, 42, 0.18);
+        }
+
+        .boss-action-tip.visible {
+            transform: translate(-50%, calc(-100% - 2px));
         }
 
         .warning-line {
@@ -866,7 +939,7 @@
             gap: 8px;
             height: 100%;
             min-height: 0;
-            padding: 10px calc(12px + var(--safe-right)) calc(var(--mobile-dock-offset) + var(--safe-bottom)) calc(12px + var(--safe-left));
+            padding: 10px calc(12px + var(--safe-right)) calc(12px + var(--safe-bottom)) calc(12px + var(--safe-left));
             overflow-x: hidden;
             overflow-y: hidden;
         }
@@ -876,7 +949,7 @@
             position: fixed;
             left: calc(10px + var(--safe-left));
             right: calc(10px + var(--safe-right));
-            bottom: calc(var(--mobile-dock-offset) - 12px + var(--safe-bottom));
+            bottom: calc(12px + var(--safe-bottom));
             z-index: 24;
             display: block;
             order: 3;
@@ -905,7 +978,14 @@
             flex-direction: column;
             align-items: stretch;
             gap: 6px;
-            margin-bottom: 6px;
+            margin-bottom: 8px;
+        }
+
+        body.mobile-version .toolbar-left {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 12px;
         }
 
         body.mobile-version .toolbar-left h1 {
@@ -918,58 +998,67 @@
             display: none;
         }
 
-        body.mobile-version .toolbar-right {
-            grid-template-columns: repeat(3, minmax(0, 1fr));
-            gap: 6px;
-            position: relative;
-            top: 0;
-            z-index: 14;
-            padding: 6px;
-            border-radius: 14px;
+        body.mobile-version .stats-bar {
+            display: flex;
+            align-items: stretch;
+            gap: 8px;
+            padding: 7px 8px;
+            border-radius: 16px;
             background: rgba(246, 249, 253, 0.92);
             border: 1px solid rgba(214, 223, 237, 0.95);
             box-shadow: 0 10px 24px rgba(15, 23, 42, 0.06);
             backdrop-filter: blur(14px);
         }
 
-        body.mobile-version .metric-card {
-            min-height: 58px;
-            padding: 6px 8px;
-            border-radius: 12px;
-            box-shadow: none;
+        body.mobile-version .stats-inline {
+            min-width: 0;
+            flex: 1;
+            display: grid;
+            grid-template-columns: repeat(3, minmax(0, 1fr));
+            gap: 6px;
+        }
+
+        body.mobile-version .stat-chip {
+            min-width: 0;
             display: flex;
             flex-direction: column;
-            justify-content: flex-start;
-            align-items: flex-start;
+            justify-content: center;
+            gap: 2px;
+            padding: 7px 9px;
+            border-radius: 12px;
+            background: rgba(255, 255, 255, 0.92);
+            border: 1px solid rgba(219, 228, 242, 0.95);
         }
 
-        body.mobile-version .metric-label {
+        body.mobile-version .stat-chip-label {
             font-size: 10px;
-            margin-bottom: 4px;
-            letter-spacing: 0.02em;
-            text-transform: none;
+            color: #8390a3;
+            letter-spacing: 0.03em;
+            text-transform: uppercase;
         }
 
-        body.mobile-version .metric-value {
-            font-size: 16px;
-            width: 100%;
-            margin-bottom: 4px;
+        body.mobile-version .stat-chip strong,
+        body.mobile-version .stat-chip #status-text {
+            min-width: 0;
+            min-height: 0;
+            margin: 0;
+            font-size: 15px;
+            font-weight: 800;
+            line-height: 1.15;
             white-space: nowrap;
             overflow: hidden;
             text-overflow: ellipsis;
-        }
-
-        body.mobile-version #status-text {
-            min-height: 18px;
-            font-size: 13px;
-            line-height: 1.1;
             display: block;
         }
 
-        body.mobile-version .metric-sub {
+        body.mobile-version .stat-chip-status {
+            position: relative;
+        }
+
+        body.mobile-version .stat-chip-sub {
             font-size: 10px;
             line-height: 1.15;
-            width: 100%;
+            color: #718096;
             white-space: nowrap;
             overflow: hidden;
             text-overflow: ellipsis;
@@ -995,14 +1084,125 @@
 
         body.mobile-version .column-header {
             display: grid;
-            grid-template-columns: auto 1fr auto;
+            grid-template-columns: minmax(0, 1fr) auto minmax(0, 1fr);
             align-items: center;
             gap: 8px;
+            padding: 10px 12px 8px;
         }
 
-        body.mobile-version .column-next {
+        body.mobile-version .column-title,
+        body.mobile-version .column-sidecopy {
             min-width: 0;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+
+        body.mobile-version .next-trigger {
+            position: relative;
+            min-width: 118px;
+            max-width: 138px;
+            padding: 8px 10px 10px;
+            border: 1px solid rgba(216, 228, 251, 0.98);
+            border-radius: 16px;
+            background: rgba(255, 255, 255, 0.96);
             text-align: center;
+            font: inherit;
+            color: #1f2a37;
+            box-shadow: 0 10px 24px rgba(15, 23, 42, 0.06);
+            overflow: hidden;
+        }
+
+        body.mobile-version .next-trigger.active {
+            border-color: rgba(101, 163, 255, 0.9);
+            background: linear-gradient(180deg, rgba(244, 248, 255, 0.98) 0%, rgba(232, 240, 255, 0.98) 100%);
+        }
+
+        body.mobile-version .next-trigger.cooldown {
+            border-color: rgba(203, 213, 225, 0.96);
+        }
+
+        body.mobile-version .next-trigger-title {
+            position: relative;
+            z-index: 1;
+            display: block;
+            font-size: 10px;
+            font-weight: 700;
+            color: #6b778c;
+            letter-spacing: 0.04em;
+            text-transform: uppercase;
+        }
+
+        body.mobile-version .next-preview-shell {
+            position: relative;
+            z-index: 1;
+            margin: 6px auto 0;
+            width: 100%;
+            display: flex;
+            justify-content: center;
+        }
+
+        body.mobile-version .next-progress {
+            position: absolute;
+            left: 8px;
+            right: 8px;
+            top: -2px;
+            height: 3px;
+            border-radius: 999px;
+            background: rgba(37, 99, 235, 0.12);
+            overflow: hidden;
+        }
+
+        body.mobile-version .next-progress::after {
+            content: "";
+            position: absolute;
+            inset: 0;
+            border-radius: inherit;
+            background: linear-gradient(90deg, #60a5fa 0%, #2563eb 100%);
+            transform-origin: left center;
+            transform: scaleX(var(--next-progress, 0));
+            transition: transform 0.2s linear, opacity 0.2s ease;
+            opacity: var(--next-progress-opacity, 0);
+        }
+
+        body.mobile-version .next-preview-ball {
+            width: 46px;
+            height: 46px;
+            border-radius: 50%;
+            border: 2px solid rgba(255, 255, 255, 0.92);
+            box-shadow: 0 8px 20px rgba(15, 23, 42, 0.12);
+            transition: opacity 0.18s ease, filter 0.18s ease, transform 0.18s ease, box-shadow 0.18s ease;
+        }
+
+        body.mobile-version .next-trigger.active .next-preview-ball {
+            opacity: 0.48;
+            filter: grayscale(0.22) blur(1.4px);
+            transform: translateY(1px) scale(0.96);
+            box-shadow: 0 6px 18px rgba(96, 165, 250, 0.18);
+        }
+
+        body.mobile-version .next-label {
+            position: relative;
+            z-index: 1;
+            display: block;
+            margin-top: 6px;
+            font-size: 12px;
+            font-weight: 800;
+            line-height: 1.15;
+            color: #1f2a37;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap;
+        }
+
+        body.mobile-version .next-skill-meta {
+            position: relative;
+            z-index: 1;
+            display: block;
+            margin-top: 3px;
+            font-size: 10px;
+            line-height: 1.15;
+            color: #6b7b92;
+            white-space: nowrap;
             overflow: hidden;
             text-overflow: ellipsis;
         }
@@ -1047,58 +1247,6 @@
             padding: 0;
             border: 0;
             background: transparent;
-            overflow: visible;
-        }
-
-        body.mobile-version .interference-panel > .panel-title,
-        body.mobile-version .interference-panel > .stat-card:not(.mobile-skill-dock) {
-            display: none;
-        }
-
-        body.mobile-version .mobile-skill-dock {
-            position: fixed;
-            left: calc(12px + var(--safe-left));
-            right: calc(12px + var(--safe-right));
-            bottom: calc(8px + var(--safe-bottom));
-            z-index: 25;
-            margin: 0;
-            padding: 6px 7px 7px;
-            border-radius: 14px;
-            border: 1px solid rgba(216, 228, 251, 0.96);
-            background: rgba(255, 255, 255, 0.98);
-            box-shadow: 0 -2px 0 rgba(255, 255, 255, 0.8), 0 10px 22px rgba(15, 23, 42, 0.12);
-            backdrop-filter: blur(16px);
-        }
-
-        body.mobile-version .mobile-skill-dock strong {
-            display: block;
-            margin-bottom: 3px;
-            font-size: 11px;
-            line-height: 1.1;
-            color: #35506f;
-        }
-
-        body.mobile-version .mobile-skill-dock .skill-grid {
-            grid-template-columns: repeat(2, minmax(0, 1fr));
-            gap: 6px;
-        }
-
-        body.mobile-version .mobile-skill-dock .skill-btn {
-            min-height: 34px;
-            padding: 0 8px;
-            border-radius: 11px;
-            text-align: center;
-            font-size: 13px;
-        }
-
-        body.mobile-version .mobile-skill-dock .skill-meta {
-            margin-top: 2px;
-            line-height: 1.15;
-            font-size: 9px;
-            color: #6a7890;
-            display: -webkit-box;
-            -webkit-box-orient: vertical;
-            -webkit-line-clamp: 1;
             overflow: hidden;
         }
 
@@ -1235,33 +1383,24 @@
                 font-size: 16px;
             }
 
-            body.mobile-version .toolbar-right {
-                grid-template-columns: repeat(3, minmax(0, 1fr));
-                gap: 6px;
+            body.mobile-version .stats-inline {
+                gap: 5px;
+            }
+
+            body.mobile-version .stats-bar {
                 padding: 6px;
-                border-radius: 14px;
+                gap: 6px;
             }
 
-            body.mobile-version .metric-card {
-                min-height: 58px;
-                padding: 6px 8px;
-                border-radius: 12px;
-            }
-
-            body.mobile-version .metric-label,
-            body.mobile-version .metric-sub {
+            body.mobile-version .stat-chip-label,
+            body.mobile-version .stat-chip-sub {
                 font-size: 10px;
                 line-height: 1.2;
             }
 
-            body.mobile-version .metric-value {
-                font-size: 15px;
-            }
-
-            body.mobile-version #status-text {
-                min-height: 20px;
-                font-size: 13px;
-                line-height: 1.1;
+            body.mobile-version .stat-chip strong,
+            body.mobile-version .stat-chip #status-text {
+                font-size: 14px;
             }
 
             body.mobile-version .drop-hint {
@@ -1286,20 +1425,23 @@
                 white-space: nowrap;
             }
 
-            body.mobile-version .mobile-skill-dock .skill-grid {
-                grid-template-columns: repeat(2, minmax(0, 1fr));
-                gap: 6px;
+            body.mobile-version .next-trigger {
+                min-width: 108px;
+                max-width: 124px;
+                padding: 7px 8px 9px;
             }
 
-            body.mobile-version .mobile-skill-dock {
-                padding: 6px 6px 7px;
+            body.mobile-version .next-preview-ball {
+                width: 42px;
+                height: 42px;
             }
 
-            body.mobile-version .mobile-skill-dock strong {
-                font-size: 10px;
+            body.mobile-version .next-label {
+                font-size: 11px;
             }
 
-            body.mobile-version .mobile-skill-dock .skill-meta {
+            body.mobile-version .next-skill-meta,
+            body.mobile-version .column-sidecopy {
                 font-size: 9px;
             }
 
@@ -1377,7 +1519,7 @@
                     </div>
                     <div class="sidebar-title">项目目录</div>
                     <div class="nav-item">冲刺_2026_第2季度 <span>12</span></div>
-                    <div class="nav-item active">待办池 <span>∞</span></div>
+                    <div class="nav-item active">需求池 <span>∞</span></div>
                     <div class="nav-item">技术债 <span>94</span></div>
                     <div class="nav-item">干系人备注 <span>7</span></div>
                     <div class="nav-item">愿景草案_v19 <span>进行中</span></div>
@@ -1404,24 +1546,24 @@
                 <main class="main-stage">
                     <div class="toolbar">
                         <div class="toolbar-left">
-                    <h1>PM画大饼生存战</h1>
+                            <h1>PM画大饼生存战</h1>
                             <p>待办列伪装成办公看板，目标是在逻辑崩溃前合成出“改变世界的 PPT”。</p>
                         </div>
-                        <div class="toolbar-right">
-                            <div class="metric-card">
-                                <div class="metric-label">产能</div>
-                                <div class="metric-value" id="score">0</div>
-                                <p class="metric-sub">故事点</p>
-                            </div>
-                            <div class="metric-card">
-                                <div class="metric-label">连击</div>
-                                <div class="metric-value" id="combo">0</div>
-                                <p class="metric-sub">甲方的好感连击</p>
-                            </div>
-                            <div class="metric-card">
-                                <div class="metric-label">状态</div>
-                                <div class="metric-value" id="status-text">稳态</div>
-                                <p class="metric-sub" id="chaos-timer">老板的拍脑袋 45s</p>
+                        <div class="stats-bar">
+                            <div class="stats-inline">
+                                <div class="stat-chip">
+                                    <span class="stat-chip-label">产能</span>
+                                    <strong id="score">0</strong>
+                                </div>
+                                <div class="stat-chip">
+                                    <span class="stat-chip-label">连击</span>
+                                    <strong id="combo">0</strong>
+                                </div>
+                                <div class="stat-chip stat-chip-status">
+                                    <span class="stat-chip-label">状态</span>
+                                    <span id="status-text">稳态</span>
+                                    <span class="stat-chip-sub" id="chaos-timer">老板的拍脑袋 45s</span>
+                                </div>
                             </div>
                         </div>
                     </div>
@@ -1429,9 +1571,17 @@
                     <div class="board-row">
                         <section class="jira-column">
                             <div class="column-header">
-                                <strong>待办</strong>
-                                <span class="column-next">下一个：<strong id="next-label">修复Bug</strong></span>
-                                <span class="column-badge">干系人混乱现场</span>
+                                <span class="column-title">需求池</span>
+                                <button class="next-trigger" id="next-trigger" type="button" aria-label="灰度发布入口">
+                                    <span class="next-trigger-title">待办 Next</span>
+                                    <span class="next-preview-shell">
+                                        <span class="next-progress" id="next-progress"></span>
+                                        <span class="next-preview-ball" id="next-preview-ball"></span>
+                                    </span>
+                                    <span class="next-label" id="next-label">修复Bug</span>
+                                    <span class="next-skill-meta" id="next-skill-meta">点击开启灰度发布</span>
+                                </button>
+                                <span class="column-sidecopy">对象关联式交互</span>
                             </div>
                             <div id="game-shell">
                                 <div class="warning-label">逻辑红线</div>
@@ -1439,25 +1589,19 @@
                                 <div class="drop-hint">
                                     <div class="drop-pill">轻点投放</div>
                                 </div>
+                                <div class="boss-action-layer" id="boss-action-layer" aria-live="polite">
+                                    <button class="boss-action-button" id="boss-action-button" type="button">
+                                        <span>🕒</span>
+                                        <span>暂缓</span>
+                                    </button>
+                                    <div class="boss-action-tip" id="boss-action-tip"></div>
+                                </div>
                                 <div id="game-canvas"></div>
                             </div>
                         </section>
 
                         <section class="side-card interference-panel" style="flex:1; min-width: 0; margin-bottom: 0;">
                             <div class="panel-title">干扰机制</div>
-                            <div class="stat-card mobile-skill-dock">
-                                <strong style="display:block; margin-bottom: 5px;">向上管理技能</strong>
-                                <div class="skill-grid">
-                                    <div>
-                                        <button class="btn skill-btn" id="postpone-skill-button" type="button">战略暂缓</button>
-                                        <p class="skill-meta" id="postpone-skill-meta">点老板球，延后 30 秒。</p>
-                                    </div>
-                                    <div>
-                                        <button class="btn skill-btn" id="canary-skill-button" type="button">灰度发布</button>
-                                        <p class="skill-meta" id="canary-skill-meta">激活后可穿透投放 3 次。</p>
-                                    </div>
-                                </div>
-                            </div>
                             <div class="stat-card">
                                 <strong style="display:block; margin-bottom: 8px;">老板的突发奇想</strong>
                                 <p class="panel-copy">每个老板球有 3 点耐心值。L3-L4 碰撞削 1 点，L5 削 2 点，L6 及以上可直接拆解。</p>
@@ -1606,6 +1750,9 @@
             browserTop: document.querySelector(".browser-top"),
             gameShell: document.getElementById("game-shell"),
             gameCanvas: document.getElementById("game-canvas"),
+            bossActionLayer: document.getElementById("boss-action-layer"),
+            bossActionButton: document.getElementById("boss-action-button"),
+            bossActionTip: document.getElementById("boss-action-tip"),
             notifications: document.getElementById("notifications"),
             warningLine: document.querySelector(".warning-line"),
             warningLabel: document.querySelector(".warning-label"),
@@ -1614,7 +1761,11 @@
             inlineNoticeText: document.getElementById("inline-notice-text"),
             score: document.getElementById("score"),
             combo: document.getElementById("combo"),
+            nextTrigger: document.getElementById("next-trigger"),
+            nextPreviewBall: document.getElementById("next-preview-ball"),
+            nextProgress: document.getElementById("next-progress"),
             nextLabel: document.getElementById("next-label"),
+            nextSkillMeta: document.getElementById("next-skill-meta"),
             status: document.getElementById("status-text"),
             chaosTimer: document.getElementById("chaos-timer"),
             report: document.getElementById("report-copy"),
@@ -1631,10 +1782,6 @@
             sequenceList: document.getElementById("sequence-list"),
             sheetGrid: document.getElementById("sheet-grid"),
             panicBackButton: document.getElementById("panic-back-button"),
-            postponeSkillButton: document.getElementById("postpone-skill-button"),
-            postponeSkillMeta: document.getElementById("postpone-skill-meta"),
-            canarySkillButton: document.getElementById("canary-skill-button"),
-            canarySkillMeta: document.getElementById("canary-skill-meta"),
             mobilePanicButton: document.getElementById("mobile-panic-button"),
             mobileRestartButton: document.getElementById("mobile-restart-button"),
             mobileInfoButton: document.getElementById("mobile-info-button"),
@@ -1668,6 +1815,10 @@
         let lastHudScore = null;
         let lastHudCombo = null;
         let lastChaosText = "";
+        window.isGrayReleaseActive = false;
+        let isGrayReleaseActive = window.isGrayReleaseActive;
+        let activeBossBallId = null;
+        let bossTipTimer = 0;
 
         const game = {
             score: 0,
@@ -1726,7 +1877,7 @@
         dom.gameShell.addEventListener("pointerdown", handleBoardPointerDown, { passive: false });
         dom.restartButton.addEventListener("click", restartGame);
         dom.dismissReport.addEventListener("click", dismissGameOver);
-        dom.canarySkillButton.addEventListener("click", activateCanaryRelease);
+        dom.nextTrigger.addEventListener("click", activateCanaryRelease);
         dom.mobilePanicButton.addEventListener("click", () => togglePanic());
         dom.panicBackButton.addEventListener("click", () => togglePanic(false));
         dom.mobileRestartButton.addEventListener("click", restartGame);
@@ -1735,12 +1886,19 @@
         dom.closeInfoDrawer.addEventListener("click", closeMobileDrawers);
         dom.closePathDrawer.addEventListener("click", closeMobileDrawers);
         dom.mobileDrawerMask.addEventListener("click", closeMobileDrawers);
-        dom.postponeSkillButton.addEventListener("click", () => {
-            if (Date.now() < game.postponeCooldownUntil) {
-                notify("项目办", `战略暂缓冷却中，还需 ${Math.ceil((game.postponeCooldownUntil - Date.now()) / 1000)} 秒。`, "warn");
-            } else {
-                notify("项目办", "战略暂缓已就绪，请直接点击场上的老板球。", "success");
+        dom.bossActionButton.addEventListener("pointerdown", (event) => {
+            event.preventDefault();
+            event.stopPropagation();
+        });
+        dom.bossActionButton.addEventListener("click", (event) => {
+            event.preventDefault();
+            event.stopPropagation();
+            const bossBall = findBossBodyById(activeBossBallId);
+            if (!bossBall) {
+                hideBossActionOverlay();
+                return;
             }
+            executePostpone(bossBall);
         });
 
         window.addEventListener("load", () => {
@@ -1864,6 +2022,7 @@
             body.radius = baseRadius;
             body.patience = BOSS_PATIENCE;
             body.maxPatience = BOSS_PATIENCE;
+            body.isBossBall = true;
             body.isPostponed = false;
             body.spawnedAt = Date.now();
             body.lastNegotiatedAt = 0;
@@ -1937,27 +2096,32 @@
             const clickedBoss = findBossBodyAtPoint(point);
             if (clickedBoss) {
                 if (clickedBoss.isPostponed) {
-                    notify("项目办", "这个老板需求已经被排到下季度了，先处理别的。", "warn");
+                    showBossCooldownTip(clickedBoss, "已暂缓");
                     return;
                 }
                 if (Date.now() < game.postponeCooldownUntil) {
-                    notify("项目办", `战略暂缓冷却中，还需 ${Math.ceil((game.postponeCooldownUntil - Date.now()) / 1000)} 秒。`, "warn");
+                    showBossCooldownTip(clickedBoss, `${Math.ceil((game.postponeCooldownUntil - Date.now()) / 1000)}s`);
                     return;
                 }
+                showBossActionForBall(clickedBoss);
+                return;
             }
-            if (tryUseStrategicPostponement(point)) return;
+            hideBossActionOverlay();
             dropCurrentWord();
         }
 
         function dropCurrentWord() {
             if (!canDrop || game.gameOver || game.panicMode) return;
             unlockAudio();
+            hideBossActionOverlay();
 
             const word = createKeywordBody(mouseX, dropY, game.nextLevel);
             if (game.canaryCharges > 0) {
                 applyCanaryRelease(word);
                 game.canaryCharges -= 1;
                 if (game.canaryCharges === 0) {
+                    isGrayReleaseActive = false;
+                    window.isGrayReleaseActive = false;
                     notify("工作台", "灰度发布窗口已关闭，后续需求重新进入主链路。", "warn");
                 }
             }
@@ -1969,7 +2133,7 @@
             dom.status.textContent = word.isCanary ? "灰度发布中" : "需求已排期";
             dom.report.textContent = word.isCanary
                 ? `灰度通道生效，剩余 ${game.canaryCharges} 个投放球可穿透堆积直落到底部。`
-                : "新的伪需求已进入待办池，留意碰撞时机。";
+                : "新的伪需求已进入需求池，留意碰撞时机。";
             updateSkillButtons();
             setTimeout(() => {
                 canDrop = true;
@@ -1983,6 +2147,7 @@
             const pool = [0, 0, 0, 1, 1, 2];
             game.nextLevel = pool[Math.floor(Math.random() * pool.length)];
             dom.nextLabel.textContent = BUZZWORDS[game.nextLevel].label;
+            renderNextPreview();
         }
 
         function handleCollisionStart(event) {
@@ -2330,6 +2495,7 @@
 
             drawAimGuide(ctx);
             ctx.restore();
+            syncBossActionOverlay();
         }
 
         function drawGlowParticles(ctx, radius) {
@@ -2432,6 +2598,7 @@
             refreshBossPressureState();
             updateChaosTimer();
             updateSkillButtons();
+            syncBossActionOverlay();
         }
 
         function updateChaosTimer() {
@@ -2515,11 +2682,16 @@
             game.postponeCooldownUntil = 0;
             game.canaryCooldownUntil = 0;
             game.canaryCharges = 0;
+            isGrayReleaseActive = false;
+            window.isGrayReleaseActive = false;
+            activeBossBallId = null;
+            clearTimeout(bossTipTimer);
             reviewThreshold = REVIEW_THRESHOLD_STEP;
             overflowStartedAt = null;
             bossCountdownStartedAt = Date.now();
             designerCountdownStartedAt = Date.now();
             dom.gameOver.classList.remove("visible");
+            hideBossActionOverlay();
             dom.status.textContent = "稳态推进";
             dom.report.textContent = "场面可控，建议继续画饼。";
             queueNextWord();
@@ -2536,7 +2708,7 @@
             const rect = dom.gameShell.getBoundingClientRect();
             boardWidth = Math.max(MIN_BOARD_WIDTH, Math.round(rect.width || BOARD_WIDTH));
             boardHeight = Math.max(MIN_BOARD_HEIGHT, Math.round(rect.height || DEFAULT_BOARD_HEIGHT));
-            warningLineY = Math.round(boardHeight * 0.191);
+            warningLineY = Math.round(boardHeight * 0.2);
             dropY = Math.max(72, Math.round(boardHeight * 0.113));
 
             // Lock the board to the measured viewport slice so surrounding UI changes
@@ -2552,10 +2724,20 @@
             dom.warningLabel.style.top = warningLineY - 20 + "px";
             const padding = getDropClampPadding();
             mouseX = clamp(mouseX, padding, boardWidth - padding);
+            syncBossActionOverlay();
         }
 
         function syncMobileDockOffset(shouldResize = true) {
-            if (!document.body.classList.contains("mobile-version") || !dom.mobileSkillDock) return;
+            if (!document.body.classList.contains("mobile-version")) return;
+            if (!dom.mobileSkillDock) {
+                const nextOffset = 12;
+                if (nextOffset !== mobileDockOffset) {
+                    mobileDockOffset = nextOffset;
+                    document.documentElement.style.setProperty("--mobile-dock-offset", `${mobileDockOffset}px`);
+                    if (shouldResize) scheduleLayoutRefresh();
+                }
+                return;
+            }
             const nextOffset = Math.max(72, Math.ceil(dom.mobileSkillDock.getBoundingClientRect().height) + 12);
             if (nextOffset === mobileDockOffset) return;
             mobileDockOffset = nextOffset;
@@ -2683,32 +2865,30 @@
 
         function updateSkillButtons() {
             const now = Date.now();
-            const postponeLeft = Math.max(0, Math.ceil((game.postponeCooldownUntil - now) / 1000));
-            const postponeDisabled = postponeLeft > 0;
-            const postponeActive = postponeLeft === 0;
-            const postponeText = postponeLeft > 0
-                ? `冷却中 ${postponeLeft}s`
-                : "就绪：点老板球延后 30 秒";
-
             const canaryLeft = Math.max(0, Math.ceil((game.canaryCooldownUntil - now) / 1000));
-            const canaryActive = game.canaryCharges > 0;
-            const canaryDisabled = canaryLeft > 0 || canaryActive;
+            isGrayReleaseActive = game.canaryCharges > 0;
+            window.isGrayReleaseActive = isGrayReleaseActive;
+            const canaryActive = isGrayReleaseActive;
             let canaryText = "";
             if (canaryActive) {
-                canaryText = `生效中：剩余 ${game.canaryCharges} 次`;
+                canaryText = `灰度发布中 · 剩余 ${game.canaryCharges} 次`;
             } else if (canaryLeft > 0) {
-                canaryText = `冷却中 ${canaryLeft}s`;
+                canaryText = `冷却 ${canaryLeft}s`;
             } else {
-                canaryText = "就绪：可穿透投放 3 次";
+                canaryText = "点击开启灰度发布";
             }
 
+            const cooldownProgress = game.canaryCooldownUntil > now
+                ? Math.max(0, Math.min(1, (game.canaryCooldownUntil - now) / CANARY_RELEASE_COOLDOWN_MS))
+                : 0;
+            const previewColor = BUZZWORDS[game.nextLevel].color;
+
             const nextSignature = [
-                postponeDisabled ? 1 : 0,
-                postponeActive ? 1 : 0,
-                postponeText,
-                canaryDisabled ? 1 : 0,
                 canaryActive ? 1 : 0,
-                canaryText
+                canaryText,
+                canaryLeft,
+                game.canaryCharges,
+                previewColor
             ].join("|");
 
             if (nextSignature === lastSkillUiSignature) {
@@ -2716,19 +2896,18 @@
             }
 
             lastSkillUiSignature = nextSignature;
-            dom.postponeSkillButton.disabled = postponeDisabled;
-            dom.postponeSkillButton.classList.toggle("active", postponeActive);
-            dom.postponeSkillMeta.textContent = postponeText;
-            dom.canarySkillButton.disabled = canaryDisabled;
-            dom.canarySkillButton.classList.toggle("active", canaryActive);
-            dom.canarySkillMeta.textContent = canaryText;
-            syncMobileDockOffset();
+            dom.nextTrigger.classList.toggle("active", canaryActive);
+            dom.nextTrigger.classList.toggle("cooldown", !canaryActive && canaryLeft > 0);
+            dom.nextSkillMeta.textContent = canaryText;
+            dom.nextProgress.style.setProperty("--next-progress", cooldownProgress.toFixed(3));
+            dom.nextProgress.style.setProperty("--next-progress-opacity", game.canaryCooldownUntil > now ? "1" : "0");
+            renderNextPreview();
         }
 
         function activateCanaryRelease() {
             if (game.gameOver || game.panicMode) return;
             const now = Date.now();
-            if (game.canaryCharges > 0) {
+            if (isGrayReleaseActive) {
                 notify("工作台", `灰度发布已开启，剩余 ${game.canaryCharges} 次穿透投放。`, "success");
                 return;
             }
@@ -2739,6 +2918,8 @@
 
             game.canaryCharges = CANARY_RELEASE_CHARGES;
             game.canaryCooldownUntil = now + CANARY_RELEASE_COOLDOWN_MS;
+            isGrayReleaseActive = true;
+            window.isGrayReleaseActive = true;
             dom.status.textContent = "灰度发布";
             dom.report.textContent = "接下来的 3 个投放球会跳过主堆积区，直接沿灰度链路落到底部。";
             notify("工作台", "灰度发布已开启，接下来 3 个投放球将具备穿透属性。", "success");
@@ -2753,17 +2934,14 @@
             body.render.lineWidth = 1.5;
         }
 
-        function tryUseStrategicPostponement(point) {
-            if (game.gameOver || game.panicMode || Date.now() < game.postponeCooldownUntil) return false;
-
-            const bossBody = findBossBodyAtPoint(point);
-            if (!bossBody || bossBody.isPostponed) return false;
-
+        function executePostpone(bossBody) {
+            if (game.gameOver || game.panicMode || !bossBody || bossBody.isPostponed || Date.now() < game.postponeCooldownUntil) return false;
             game.postponeCooldownUntil = Date.now() + POSTPONE_COOLDOWN_MS;
             bossBody.isPostponed = true;
             bossBody.render.opacity = 0.45;
             Body.scale(bossBody, 0.5, 0.5);
             bossBody.radius *= 0.5;
+            hideBossActionOverlay();
             dom.status.textContent = "战略暂缓";
             dom.report.textContent = `你成功说服老板把「${bossBody.displayLabel}」排到下季度，它将在 30 秒内缩成半个体量。`;
             notify("产品经理", `已将「${bossBody.displayLabel}」排期置后 30 秒。`, "success");
@@ -2782,8 +2960,64 @@
             return true;
         }
 
+        function renderNextPreview() {
+            const config = BUZZWORDS[game.nextLevel];
+            if (!config || !dom.nextPreviewBall) return;
+            dom.nextPreviewBall.style.background = `radial-gradient(circle at 32% 28%, rgba(255,255,255,0.94) 0%, ${config.color} 72%)`;
+            dom.nextPreviewBall.style.borderColor = game.canaryCharges > 0 ? "rgba(191, 219, 254, 0.95)" : "rgba(255, 255, 255, 0.92)";
+        }
+
+        function findBossBodyById(id) {
+            if (!id) return null;
+            return Composite.allBodies(engine.world).find((body) => body.id === id && (body.isBossBall || body.label === "bossVision")) || null;
+        }
+
+        function showBossActionForBall(ball) {
+            activeBossBallId = ball.id;
+            clearTimeout(bossTipTimer);
+            dom.bossActionTip.classList.remove("visible");
+            dom.bossActionButton.classList.add("visible");
+            syncBossActionOverlay();
+        }
+
+        function showBossCooldownTip(ball, text) {
+            activeBossBallId = ball.id;
+            clearTimeout(bossTipTimer);
+            dom.bossActionButton.classList.remove("visible");
+            dom.bossActionTip.textContent = text;
+            dom.bossActionTip.classList.add("visible");
+            syncBossActionOverlay();
+            bossTipTimer = setTimeout(() => {
+                if (activeBossBallId === ball.id) {
+                    hideBossActionOverlay();
+                }
+            }, 1200);
+        }
+
+        function hideBossActionOverlay() {
+            clearTimeout(bossTipTimer);
+            activeBossBallId = null;
+            dom.bossActionButton.classList.remove("visible");
+            dom.bossActionTip.classList.remove("visible");
+        }
+
+        function syncBossActionOverlay() {
+            const bossBall = findBossBodyById(activeBossBallId);
+            if (!bossBall) {
+                hideBossActionOverlay();
+                return;
+            }
+
+            const anchorX = clamp(bossBall.position.x, 20, boardWidth - 20);
+            const anchorY = clamp(bossBall.position.y - bossBall.radius - 20, 18, boardHeight - 20);
+            dom.bossActionButton.style.left = `${anchorX}px`;
+            dom.bossActionButton.style.top = `${anchorY}px`;
+            dom.bossActionTip.style.left = `${anchorX}px`;
+            dom.bossActionTip.style.top = `${anchorY}px`;
+        }
+
         function findBossBodyAtPoint(point) {
-            const bosses = Composite.allBodies(engine.world).filter((body) => body.label === "bossVision");
+            const bosses = Composite.allBodies(engine.world).filter((body) => body.isBossBall || body.label === "bossVision");
             for (let index = bosses.length - 1; index >= 0; index -= 1) {
                 const body = bosses[index];
                 const dx = point.x - body.position.x;
